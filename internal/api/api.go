@@ -15,10 +15,10 @@ type Engine interface {
 
 type engine struct {
 	app *gin.Engine
-	cfg config.Config
+	cfg *config.Config
 }
 
-func NewEngine(cfg config.Config) Engine {
+func NewEngine(cfg *config.Config) Engine {
 	e := &engine{app: gin.Default(), cfg: cfg}
 	e.initRoutes()
 

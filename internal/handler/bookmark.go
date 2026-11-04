@@ -12,10 +12,10 @@ type Bookmark interface {
 }
 
 type bookmark struct {
-	cfg config.Config
+	cfg *config.Config
 }
 
-func NewBookMark(cfg config.Config) Bookmark {
+func NewBookMark(cfg *config.Config) Bookmark {
 	return &bookmark{cfg: cfg}
 }
 

@@ -17,7 +17,7 @@ func TestHealthCheck(t *testing.T) {
 
 	testCases := []struct {
 		name               string
-		cfg                config.Config
+		cfg                *config.Config
 		expectedStatus     int
 		expectedMessage    string
 		expectedService    string
@@ -25,7 +25,7 @@ func TestHealthCheck(t *testing.T) {
 	}{
 		{
 			name: "success",
-			cfg: config.Config{
+			cfg: &config.Config{
 				ServiceName: "bookmark_service",
 				InstanceID:  "f1fef0a1-e50b-4c52-b205-855181037ab4",
 				Port:        8080,
