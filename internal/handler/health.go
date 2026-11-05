@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/SonDo580/bookmark-manager/internal/config"
+	"github.com/SonDo580/bookmark-manager/internal/service"
 	"github.com/gin-gonic/gin"
 )
 
@@ -12,17 +13,14 @@ type Health interface {
 }
 
 type health struct {
-	cfg *config.Config
+	svc service.Health
 }
 
 func NewHealth(cfg *config.Config) Health {
-	return &health{cfg: cfg}
+	healthSvc := service.NewHealth(cfg)
+	return &health{svc: healthSvc}
 }
 
 func (h *health) HealthCheck(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"message":      "OK",
-		"service_name": h.cfg.ServiceName,
-		"instance_id":  h.cfg.InstanceID,
-	})
+	c.JSON(http.StatusOK, h.svc.Check())
 }
