@@ -6,6 +6,7 @@ import (
 
 	"github.com/SonDo580/bookmark-manager/internal/config"
 	"github.com/SonDo580/bookmark-manager/internal/handler"
+	"github.com/SonDo580/bookmark-manager/internal/service"
 	"github.com/gin-gonic/gin"
 )
 
@@ -31,7 +32,8 @@ func (e *engine) Start() error {
 }
 
 func (e *engine) initRoutes() {
-	healthHandler := handler.NewHealth(e.cfg)
+	healthSvc := service.NewHealth(e.cfg)
+	healthHandler := handler.NewHealth(healthSvc)
 
 	e.app.GET("/health-check", healthHandler.HealthCheck)
 }

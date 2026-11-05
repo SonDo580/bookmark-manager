@@ -5,8 +5,9 @@ import (
 	"github.com/SonDo580/bookmark-manager/internal/model"
 )
 
+//go:generate mockery --name=Health --filename=health.go --outpkg=mocks
 type Health interface {
-	Check() model.HealthCheckResp
+	Check() model.HealthCheckResponse
 }
 
 type health struct {
@@ -17,9 +18,9 @@ func NewHealth(cfg *config.Config) Health {
 	return &health{cfg: cfg}
 }
 
-func (s *health) Check() model.HealthCheckResp {
-	return model.HealthCheckResp{
-		Message:     "OK",
+func (s *health) Check() model.HealthCheckResponse {
+	return model.HealthCheckResponse{
+		Message:     model.HealthStatusOK,
 		ServiceName: s.cfg.ServiceName,
 		InstanceID:  s.cfg.InstanceID,
 	}

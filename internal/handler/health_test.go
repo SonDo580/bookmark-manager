@@ -5,8 +5,10 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"uuid"
 
-	"github.com/SonDo580/bookmark-manager/internal/config"
+	"github.com/SonDo580/bookmark-manager/internal/model"
+	"github.com/SonDo580/bookmark-manager/internal/service/mocks"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -16,24 +18,18 @@ func TestHealthCheck(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
-		name               string
-		cfg                *config.Config
-		expectedStatus     int
-		expectedMessage    string
-		expectedService    string
-		expectedInstanceID string
+		name             string
+		expectedStatus   int
+		expectedResponse model.HealthCheckResponse
 	}{
 		{
-			name: "success",
-			cfg: &config.Config{
+			name:           "success",
+			expectedStatus: http.StatusOK,
+			expectedResponse: model.HealthCheckResponse{
+				Message:     model.HealthStatusOK,
 				ServiceName: "bookmark_service",
-				InstanceID:  "f1fef0a1-e50b-4c52-b205-855181037ab4",
-				Port:        8080,
+				InstanceID:  uuid.New().String(),
 			},
-			expectedStatus:     http.StatusOK,
-			expectedMessage:    "OK",
-			expectedService:    "bookmark_service",
-			expectedInstanceID: "f1fef0a1-e50b-4c52-b205-855181037ab4",
 		},
 	}
 
@@ -41,20 +37,22 @@ func TestHealthCheck(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
+			mockHealthSvc := mocks.NewHealth(t)
+			mockHealthSvc.On("Check").Return(tc.expectedResponse).Once()
+
+			healthHandler := NewHealth(mockHealthSvc)
+
 			rec := httptest.NewRecorder()
 			ginCtx, _ := gin.CreateTestContext(rec)
-			healthHandler := NewHealth(tc.cfg)
 			healthHandler.HealthCheck(ginCtx)
 
 			assert.Equal(t, tc.expectedStatus, rec.Code)
 
-			var body map[string]any
-			err := json.Unmarshal(rec.Body.Bytes(), &body)
+			var actualResponse model.HealthCheckResponse
+			err := json.Unmarshal(rec.Body.Bytes(), &actualResponse)
 			require.NoError(t, err)
 
-			assert.Equal(t, "OK", body["message"])
-			assert.Equal(t, tc.expectedService, body["service_name"])
-			assert.Equal(t, tc.expectedInstanceID, body["instance_id"])
+			assert.Equal(t, tc.expectedResponse, actualResponse)
 		})
 	}
 }
