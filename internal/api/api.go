@@ -11,6 +11,7 @@ import (
 
 type Engine interface {
 	Start() error
+	ServeHTTP(w http.ResponseWriter, req *http.Request)
 }
 
 type engine struct {
