@@ -7,19 +7,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type Bookmark interface {
+type Health interface {
 	HealthCheck(c *gin.Context)
 }
 
-type bookmark struct {
+type health struct {
 	cfg *config.Config
 }
 
-func NewBookMark(cfg *config.Config) Bookmark {
-	return &bookmark{cfg: cfg}
+func NewHealth(cfg *config.Config) Health {
+	return &health{cfg: cfg}
 }
 
-func (h *bookmark) HealthCheck(c *gin.Context) {
+func (h *health) HealthCheck(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message":      "OK",
 		"service_name": h.cfg.ServiceName,

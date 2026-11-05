@@ -31,9 +31,9 @@ func (e *engine) Start() error {
 }
 
 func (e *engine) initRoutes() {
-	bookmarkHandler := handler.NewBookMark(e.cfg)
+	healthHandler := handler.NewHealth(e.cfg)
 
-	e.app.GET("/health-check", bookmarkHandler.HealthCheck)
+	e.app.GET("/health-check", healthHandler.HealthCheck)
 }
 
 func (e *engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {

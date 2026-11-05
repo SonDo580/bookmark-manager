@@ -43,8 +43,8 @@ func TestHealthCheck(t *testing.T) {
 
 			rec := httptest.NewRecorder()
 			ginCtx, _ := gin.CreateTestContext(rec)
-			bookmarkHandler := NewBookMark(tc.cfg)
-			bookmarkHandler.HealthCheck(ginCtx)
+			healthHandler := NewHealth(tc.cfg)
+			healthHandler.HealthCheck(ginCtx)
 
 			assert.Equal(t, tc.expectedStatus, rec.Code)
 
