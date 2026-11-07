@@ -1,0 +1,37 @@
+basePath: /
+definitions:
+  model.HealthCheckResponse:
+    properties:
+      instance_id:
+        type: string
+      message:
+        $ref: '#/definitions/model.HealthStatus'
+      service_name:
+        type: string
+    type: object
+  model.HealthStatus:
+    enum:
+    - OK
+    type: string
+    x-enum-varnames:
+    - HealthStatusOK
+info:
+  contact: {}
+  description: API for managing bookmark
+  title: Bookmark Manager API
+  version: 1.0.0
+paths:
+  /health-check:
+    get:
+      description: Check status of application and dependencies
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.HealthCheckResponse'
+      summary: Health check
+      tags:
+      - health
+swagger: "2.0"

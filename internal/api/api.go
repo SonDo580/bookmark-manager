@@ -8,6 +8,10 @@ import (
 	"github.com/SonDo580/bookmark-manager/internal/handler"
 	"github.com/SonDo580/bookmark-manager/internal/service"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
+
+	_ "github.com/SonDo580/bookmark-manager/docs"
 )
 
 type Engine interface {
@@ -34,6 +38,8 @@ func (e *engine) Start() error {
 func (e *engine) initRoutes() {
 	healthSvc := service.NewHealth(e.cfg)
 	healthHandler := handler.NewHealth(healthSvc)
+
+	e.app.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	e.app.GET("/health-check", healthHandler.HealthCheck)
 }

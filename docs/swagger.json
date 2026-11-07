@@ -1,0 +1,57 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "API for managing bookmark",
+        "title": "Bookmark Manager API",
+        "contact": {},
+        "version": "1.0.0"
+    },
+    "basePath": "/",
+    "paths": {
+        "/health-check": {
+            "get": {
+                "description": "Check status of application and dependencies",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Health check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.HealthCheckResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "model.HealthCheckResponse": {
+            "type": "object",
+            "properties": {
+                "instance_id": {
+                    "type": "string"
+                },
+                "message": {
+                    "$ref": "#/definitions/model.HealthStatus"
+                },
+                "service_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.HealthStatus": {
+            "type": "string",
+            "enum": [
+                "OK"
+            ],
+            "x-enum-varnames": [
+                "HealthStatusOK"
+            ]
+        }
+    }
+}

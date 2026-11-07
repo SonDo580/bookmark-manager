@@ -19,6 +19,13 @@ func NewHealth(svc service.Health) Health {
 	return &health{svc: svc}
 }
 
+// HealthCheck godoc
+// @Summary      Health check
+// @Description  Check status of application and dependencies
+// @Tags         health
+// @Produce      application/json
+// @Success      200  {object}  model.HealthCheckResponse
+// @Router       /health-check [get]
 func (h *health) HealthCheck(c *gin.Context) {
 	c.JSON(http.StatusOK, h.svc.Check())
 }
