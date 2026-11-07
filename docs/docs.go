@@ -17,7 +17,7 @@ const docTemplate = `{
     "paths": {
         "/health-check": {
             "get": {
-                "description": "Check status of application and dependencies",
+                "description": "Check status of application and dependencies.",
                 "produces": [
                     "application/json"
                 ],
@@ -34,9 +34,63 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/v1/links/shorten": {
+            "post": {
+                "description": "Generate a shortened URL from the original URL.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "link"
+                ],
+                "summary": "Generate a shortened URL",
+                "parameters": [
+                    {
+                        "description": "Input required",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.ShortenURLRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/model.ShortenURLResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "model.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
         "model.HealthCheckResponse": {
             "type": "object",
             "properties": {
@@ -59,6 +113,28 @@ const docTemplate = `{
             "x-enum-varnames": [
                 "HealthStatusOK"
             ]
+        },
+        "model.ShortenURLRequest": {
+            "type": "object",
+            "properties": {
+                "exp_seconds": {
+                    "type": "integer"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.ShortenURLResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
         }
     }
 }`

@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/SonDo580/bookmark-manager/internal/api"
 	"github.com/SonDo580/bookmark-manager/internal/config"
+	"github.com/SonDo580/bookmark-manager/pkg/redis"
 )
 
 // @title           Bookmark Manager API
@@ -15,7 +16,12 @@ func main() {
 		panic(err)
 	}
 
-	app := api.NewEngine(cfg)
+	redisClient, err := redis.NewClient("")
+	if err != nil {
+		panic(err)
+	}
+
+	app := api.NewEngine(cfg, redisClient)
 	err = app.Start()
 	if err != nil {
 		panic(err)

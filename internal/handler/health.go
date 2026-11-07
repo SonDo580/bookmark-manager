@@ -21,9 +21,9 @@ func NewHealth(svc service.Health) Health {
 
 // HealthCheck godoc
 // @Summary      Health check
-// @Description  Check status of application and dependencies
+// @Description  Check status of application and dependencies.
 // @Tags         health
-// @Produce      application/json
+// @Produce      json
 // @Success      200  {object}  model.HealthCheckResponse
 // @Router       /health-check [get]
 func (h *health) HealthCheck(c *gin.Context) {
