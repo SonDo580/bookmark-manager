@@ -5,9 +5,10 @@ import (
 	"math/big"
 )
 
-const DefaultCodeLength = 8
+const DefaultCodeLength = 7
 const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 
+//go:generate mockery --name=GenCode --filename gen_code.go --outpkg service_mocks
 type GenCode interface {
 	GenerateCode(length int) (string, error)
 }

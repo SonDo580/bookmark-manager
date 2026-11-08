@@ -7,8 +7,9 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+//go:generate mockery --name=URLStorage --filename url_storage.go --outpkg repository_mocks
 type URLStorage interface {
-	StoreURL(ctx context.Context, key string, url string, exp time.Duration) error
+	StoreURL(ctx context.Context, key string, url string, exp time.Duration) (bool, error)
 	GetURL(ctx context.Context, key string) (string, error)
 }
 
@@ -20,12 +21,10 @@ func NewURLStorage(c *redis.Client) URLStorage {
 	return &urlStorage{c: c}
 }
 
-func (r *urlStorage) StoreURL(ctx context.Context, key string, url string, exp time.Duration) error {
-	// TODO: handle conflict
-	return r.c.Set(ctx, key, url, exp).Err()
+func (r *urlStorage) StoreURL(ctx context.Context, key string, url string, exp time.Duration) (bool, error) {
+	return r.c.SetNX(ctx, key, url, exp).Result()
 }
 
 func (r *urlStorage) GetURL(ctx context.Context, key string) (string, error) {
-	// TODO: does it return error when key expires
 	return r.c.Get(ctx, key).Result()
 }

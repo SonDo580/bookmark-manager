@@ -20,6 +20,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	defer redisClient.Close()
 
 	app := api.NewEngine(cfg, redisClient)
 	err = app.Start()

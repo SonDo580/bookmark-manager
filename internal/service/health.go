@@ -5,7 +5,7 @@ import (
 	"github.com/SonDo580/bookmark-manager/internal/model"
 )
 
-//go:generate mockery --name=Health --filename=health.go --outpkg=mocks
+//go:generate mockery --name=Health --filename=health.go --outpkg=service_mocks
 type Health interface {
 	Check() model.HealthCheckResponse
 }

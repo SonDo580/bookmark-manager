@@ -8,7 +8,7 @@ import (
 	"uuid"
 
 	"github.com/SonDo580/bookmark-manager/internal/model"
-	"github.com/SonDo580/bookmark-manager/internal/service/mocks"
+	service_mocks "github.com/SonDo580/bookmark-manager/internal/service/mocks"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -16,6 +16,8 @@ import (
 
 func TestHealthCheck(t *testing.T) {
 	t.Parallel()
+
+	gin.SetMode(gin.TestMode)
 
 	testCases := []struct {
 		name             string
@@ -37,7 +39,7 @@ func TestHealthCheck(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			mockHealthSvc := mocks.NewHealth(t)
+			mockHealthSvc := service_mocks.NewHealth(t)
 			mockHealthSvc.On("Check").Return(tc.expectedResponse).Once()
 
 			healthHandler := NewHealth(mockHealthSvc)
@@ -53,6 +55,8 @@ func TestHealthCheck(t *testing.T) {
 			require.NoError(t, err)
 
 			assert.Equal(t, tc.expectedResponse, actualResponse)
+
+			mockHealthSvc.AssertExpectations(t)
 		})
 	}
 }
