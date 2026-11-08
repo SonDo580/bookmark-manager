@@ -1,27 +1,36 @@
 package service
 
 import (
+	"context"
+
 	"github.com/SonDo580/bookmark-manager/internal/config"
 	"github.com/SonDo580/bookmark-manager/internal/model"
+	"github.com/redis/go-redis/v9"
 )
 
 //go:generate mockery --name=Health --filename=health.go --outpkg=service_mocks
 type Health interface {
-	Check() model.HealthCheckResponse
+	Check(ctx context.Context) (model.HealthCheckResponse, error)
 }
 
 type health struct {
-	cfg *config.Config
+	cfg         *config.Config
+	redisClient *redis.Client
 }
 
-func NewHealth(cfg *config.Config) Health {
-	return &health{cfg: cfg}
+func NewHealth(cfg *config.Config, redisClient *redis.Client) Health {
+	return &health{cfg: cfg, redisClient: redisClient}
 }
 
-func (s *health) Check() model.HealthCheckResponse {
+func (s *health) Check(ctx context.Context) (model.HealthCheckResponse, error) {
+	// Check Redis connection
+	if err := s.redisClient.Ping(ctx).Err(); err != nil {
+		return model.HealthCheckResponse{}, err
+	}
+
 	return model.HealthCheckResponse{
 		Message:     model.HealthStatusOK,
 		ServiceName: s.cfg.ServiceName,
 		InstanceID:  s.cfg.InstanceID,
-	}
+	}, nil
 }

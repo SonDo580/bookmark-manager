@@ -39,7 +39,7 @@ func (e *engine) Start() error {
 }
 
 func (e *engine) initRoutes() {
-	healthSvc := service.NewHealth(e.cfg)
+	healthSvc := service.NewHealth(e.cfg, e.redisClient)
 	healthHandler := handler.NewHealth(healthSvc)
 
 	urlStorageRepo := repository.NewURLStorage(e.redisClient)

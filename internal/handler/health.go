@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 
+	"github.com/SonDo580/bookmark-manager/internal/model"
 	"github.com/SonDo580/bookmark-manager/internal/service"
 	"github.com/gin-gonic/gin"
 )
@@ -25,7 +26,17 @@ func NewHealth(svc service.Health) Health {
 // @Tags         health
 // @Produce      json
 // @Success      200  {object}  model.HealthCheckResponse
+// @Failure      500  {object}  model.ErrorResponse
 // @Router       /health-check [get]
 func (h *health) HealthCheck(c *gin.Context) {
-	c.JSON(http.StatusOK, h.svc.Check())
+	response, err := h.svc.Check(c.Request.Context())
+	if err != nil {
+		c.AbortWithStatusJSON(
+			http.StatusInternalServerError,
+			model.ErrorResponse{Error: "Internal Server Error"},
+		)
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
 }
