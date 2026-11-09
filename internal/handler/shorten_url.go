@@ -21,6 +21,16 @@ func NewShortenURL(svc service.ShortenURL) ShortenURL {
 	return &shortenURL{svc: svc}
 }
 
+type ShortenURLRequest struct {
+	URL        string `json:"url" binding:"required,url"`
+	ExpSeconds int    `json:"exp_seconds" binding:"gte=0,lte=86400"`
+}
+
+type ShortenURLResponse struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
+}
+
 // CreateShortenedLink godoc
 // @Summary      Generate a shortened URL
 // @Description  Generate a shortened URL from the original URL.
@@ -33,7 +43,7 @@ func NewShortenURL(svc service.ShortenURL) ShortenURL {
 // @Failure      500      {object}  model.ErrorResponse
 // @Router       /v1/links/shorten [post]
 func (h *shortenURL) CreateShortenedLink(c *gin.Context) {
-	input := &model.ShortenURLRequest{}
+	input := &ShortenURLRequest{}
 	if err := c.ShouldBindJSON(input); err != nil {
 		c.AbortWithStatusJSON(
 			http.StatusBadRequest,
@@ -54,7 +64,7 @@ func (h *shortenURL) CreateShortenedLink(c *gin.Context) {
 
 	c.JSON(
 		http.StatusCreated,
-		model.ShortenURLResponse{
+		ShortenURLResponse{
 			Code:    code,
 			Message: "Shorten URL generated successfully!",
 		},

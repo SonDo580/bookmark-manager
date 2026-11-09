@@ -31,8 +31,8 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 		Error: "Invalid Input",
 	}
 
-	responseSuccess := func(code string) model.ShortenURLResponse {
-		return model.ShortenURLResponse{
+	responseSuccess := func(code string) ShortenURLResponse {
+		return ShortenURLResponse{
 			Code:    code,
 			Message: "Shorten URL generated successfully!",
 		}
@@ -47,7 +47,7 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 	}{
 		{
 			name: "success",
-			input: model.ShortenURLRequest{
+			input: ShortenURLRequest{
 				URL:        testURL,
 				ExpSeconds: testExpSeconds,
 			},
@@ -78,7 +78,7 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 		},
 		{
 			name: "fail: missing required url",
-			input: model.ShortenURLRequest{
+			input: ShortenURLRequest{
 				ExpSeconds: 3600,
 			},
 			setupMocks:       func(mockSvc *service_mocks.ShortenURL, ctx context.Context) {},
@@ -87,7 +87,7 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 		},
 		{
 			name: "fail: negative exp_seconds",
-			input: model.ShortenURLRequest{
+			input: ShortenURLRequest{
 				URL:        testURL,
 				ExpSeconds: -10,
 			},
@@ -97,7 +97,7 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 		},
 		{
 			name: "fail: exceed exp_seconds limit",
-			input: model.ShortenURLRequest{
+			input: ShortenURLRequest{
 				URL:        testURL,
 				ExpSeconds: 86400 + 1,
 			},
@@ -107,7 +107,7 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 		},
 		{
 			name: "success: omit optional exp_seconds",
-			input: model.ShortenURLRequest{
+			input: ShortenURLRequest{
 				URL: testURL,
 			},
 			setupMocks: func(mockSvc *service_mocks.ShortenURL, ctx context.Context) {
@@ -120,7 +120,7 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 		},
 		{
 			name: "fail: service error",
-			input: model.ShortenURLRequest{
+			input: ShortenURLRequest{
 				URL:        testURL,
 				ExpSeconds: testExpSeconds,
 			},
@@ -173,8 +173,8 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 
 			// Assert response body
 			switch expectedResponse := tc.expectedResponse.(type) {
-			case model.ShortenURLResponse:
-				var actualResponse model.ShortenURLResponse
+			case ShortenURLResponse:
+				var actualResponse ShortenURLResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &actualResponse)
 				require.NoError(t, err)
 				assert.Equal(t, expectedResponse, actualResponse)

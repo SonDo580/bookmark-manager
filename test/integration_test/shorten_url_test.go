@@ -10,6 +10,7 @@ import (
 
 	"github.com/SonDo580/bookmark-manager/internal/api"
 	"github.com/SonDo580/bookmark-manager/internal/config"
+	"github.com/SonDo580/bookmark-manager/internal/handler"
 	"github.com/SonDo580/bookmark-manager/internal/model"
 	"github.com/SonDo580/bookmark-manager/internal/service"
 	redisPkg "github.com/SonDo580/bookmark-manager/pkg/redis"
@@ -56,7 +57,7 @@ func TestShortenURL(t *testing.T) {
 		{
 			name: "success",
 			setupTestRequest: func() *http.Request {
-				return newJSONRequest(correctMethod, correctEndpoint, model.ShortenURLRequest{
+				return newJSONRequest(correctMethod, correctEndpoint, handler.ShortenURLRequest{
 					URL:        testURL,
 					ExpSeconds: testExpSeconds,
 				})
@@ -66,7 +67,7 @@ func TestShortenURL(t *testing.T) {
 		{
 			name: "fail: invalid request body (negative exp_seconds)",
 			setupTestRequest: func() *http.Request {
-				return newJSONRequest(correctMethod, correctEndpoint, model.ShortenURLRequest{
+				return newJSONRequest(correctMethod, correctEndpoint, handler.ShortenURLRequest{
 					URL:        testURL,
 					ExpSeconds: -10,
 				})
@@ -92,7 +93,7 @@ func TestShortenURL(t *testing.T) {
 
 			switch tc.expectedStatus {
 			case http.StatusCreated:
-				var actualResponse model.ShortenURLResponse
+				var actualResponse handler.ShortenURLResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &actualResponse)
 				require.NoError(t, err)
 
