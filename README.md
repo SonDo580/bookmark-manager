@@ -2,7 +2,7 @@
 
 ## Development
 
-- Create `.env` file: check `internal/config/config.go`.
+- Create `.env` file: check `.env.example`.
 
 - First-time installation:
 
