@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -13,7 +14,6 @@ import (
 	service_mocks "github.com/SonDo580/bookmark-manager/internal/service/mocks"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -41,7 +41,7 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 	testCases := []struct {
 		name             string
 		input            any
-		setupMocks       func(mockSvc *service_mocks.ShortenURL)
+		setupMocks       func(mockSvc *service_mocks.ShortenURL, ctx context.Context)
 		expectedStatus   int
 		expectedResponse any
 	}{
@@ -51,8 +51,8 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 				URL:        testURL,
 				ExpSeconds: testExpSeconds,
 			},
-			setupMocks: func(mockSvc *service_mocks.ShortenURL) {
-				mockSvc.On("CreateShortenedLink", mock.Anything, testURL, testExp).
+			setupMocks: func(mockSvc *service_mocks.ShortenURL, ctx context.Context) {
+				mockSvc.On("CreateShortenedLink", ctx, testURL, testExp).
 					Return(testCode, nil).
 					Once()
 			},
@@ -62,7 +62,7 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 		{
 			name:             "fail: malformed input",
 			input:            "{invalid-json",
-			setupMocks:       func(mockSvc *service_mocks.ShortenURL) {},
+			setupMocks:       func(mockSvc *service_mocks.ShortenURL, ctx context.Context) {},
 			expectedStatus:   http.StatusBadRequest,
 			expectedResponse: responseInvalidInput,
 		},
@@ -72,7 +72,7 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 				"url":         1234,
 				"exp_seconds": "NaN",
 			},
-			setupMocks:       func(mockSvc *service_mocks.ShortenURL) {},
+			setupMocks:       func(mockSvc *service_mocks.ShortenURL, ctx context.Context) {},
 			expectedStatus:   http.StatusBadRequest,
 			expectedResponse: responseInvalidInput,
 		},
@@ -81,7 +81,7 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 			input: model.ShortenURLRequest{
 				ExpSeconds: 3600,
 			},
-			setupMocks:       func(mockSvc *service_mocks.ShortenURL) {},
+			setupMocks:       func(mockSvc *service_mocks.ShortenURL, ctx context.Context) {},
 			expectedStatus:   http.StatusBadRequest,
 			expectedResponse: responseInvalidInput,
 		},
@@ -91,7 +91,7 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 				URL:        testURL,
 				ExpSeconds: -10,
 			},
-			setupMocks:       func(mockSvc *service_mocks.ShortenURL) {},
+			setupMocks:       func(mockSvc *service_mocks.ShortenURL, ctx context.Context) {},
 			expectedStatus:   http.StatusBadRequest,
 			expectedResponse: responseInvalidInput,
 		},
@@ -101,7 +101,7 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 				URL:        testURL,
 				ExpSeconds: 86400 + 1,
 			},
-			setupMocks:       func(mockSvc *service_mocks.ShortenURL) {},
+			setupMocks:       func(mockSvc *service_mocks.ShortenURL, ctx context.Context) {},
 			expectedStatus:   http.StatusBadRequest,
 			expectedResponse: responseInvalidInput,
 		},
@@ -110,8 +110,8 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 			input: model.ShortenURLRequest{
 				URL: testURL,
 			},
-			setupMocks: func(mockSvc *service_mocks.ShortenURL) {
-				mockSvc.On("CreateShortenedLink", mock.Anything, testURL, time.Duration(0)).
+			setupMocks: func(mockSvc *service_mocks.ShortenURL, ctx context.Context) {
+				mockSvc.On("CreateShortenedLink", ctx, testURL, time.Duration(0)).
 					Return(testCode, nil).
 					Once()
 			},
@@ -124,8 +124,8 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 				URL:        testURL,
 				ExpSeconds: testExpSeconds,
 			},
-			setupMocks: func(mockSvc *service_mocks.ShortenURL) {
-				mockSvc.On("CreateShortenedLink", mock.Anything, testURL, testExp).
+			setupMocks: func(mockSvc *service_mocks.ShortenURL, ctx context.Context) {
+				mockSvc.On("CreateShortenedLink", ctx, testURL, testExp).
 					Return("", errors.New("fail to store")).
 					Once()
 			},
@@ -140,12 +140,6 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			// Setup mocks & Create handler
-			mockSvc := service_mocks.NewShortenURL(t)
-			tc.setupMocks(mockSvc)
-
-			handler := NewShortenURL(mockSvc)
-
 			// Serialize request body
 			var inputBytes []byte
 			var err error
@@ -157,13 +151,19 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			// Create HTTP request & Gin test context
+			// Create request & Gin test context
 			req := httptest.NewRequest(http.MethodPost, "/v1/links/shorten", bytes.NewBuffer(inputBytes))
 			req.Header.Set("Content-Type", "application/json")
 
 			rec := httptest.NewRecorder()
 			ginCtx, _ := gin.CreateTestContext(rec)
 			ginCtx.Request = req
+
+			// Setup mocks & Create handler
+			mockSvc := service_mocks.NewShortenURL(t)
+			tc.setupMocks(mockSvc, ginCtx)
+
+			handler := NewShortenURL(mockSvc)
 
 			// Execute handler
 			handler.CreateShortenedLink(ginCtx)

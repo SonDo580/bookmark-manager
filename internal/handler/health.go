@@ -29,7 +29,7 @@ func NewHealth(svc service.Health) Health {
 // @Failure      500  {object}  model.ErrorResponse
 // @Router       /health-check [get]
 func (h *health) HealthCheck(c *gin.Context) {
-	response, err := h.svc.Check(c.Request.Context())
+	response, err := h.svc.Check(c)
 	if err != nil {
 		c.AbortWithStatusJSON(
 			http.StatusInternalServerError,
