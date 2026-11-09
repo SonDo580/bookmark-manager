@@ -96,6 +96,16 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 			expectedResponse: responseInvalidInput,
 		},
 		{
+			name: "fail: exceed exp_seconds limit",
+			input: model.ShortenURLRequest{
+				URL:        testURL,
+				ExpSeconds: 86400 + 1,
+			},
+			setupMocks:       func(mockSvc *service_mocks.ShortenURL) {},
+			expectedStatus:   http.StatusBadRequest,
+			expectedResponse: responseInvalidInput,
+		},
+		{
 			name: "success: omit optional exp_seconds",
 			input: model.ShortenURLRequest{
 				URL: testURL,

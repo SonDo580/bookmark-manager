@@ -2,7 +2,7 @@ package model
 
 type ShortenURLRequest struct {
 	URL        string `json:"url" binding:"required,url"`
-	ExpSeconds int    `json:"exp_seconds" binding:"gte=0"`
+	ExpSeconds int    `json:"exp_seconds" binding:"gte=0,lte=86400"`
 }
 
 type ShortenURLResponse struct {
