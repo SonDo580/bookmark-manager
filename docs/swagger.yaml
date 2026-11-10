@@ -1,33 +1,31 @@
 basePath: /
 definitions:
-  model.ErrorResponse:
+  dto.ErrorResponse:
     properties:
       error:
         type: string
     type: object
-  model.HealthCheckResponse:
+  dto.HealthCheckResponse:
     properties:
       instance_id:
         type: string
       message:
-        $ref: '#/definitions/model.HealthStatus'
+        type: string
       service_name:
         type: string
     type: object
-  model.HealthStatus:
-    enum:
-    - OK
-    type: string
-    x-enum-varnames:
-    - HealthStatusOK
-  model.ShortenURLRequest:
+  handler.ShortenURLRequest:
     properties:
       exp_seconds:
+        maximum: 86400
+        minimum: 0
         type: integer
       url:
         type: string
+    required:
+    - url
     type: object
-  model.ShortenURLResponse:
+  handler.ShortenURLResponse:
     properties:
       code:
         type: string
@@ -49,10 +47,39 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.HealthCheckResponse'
+            $ref: '#/definitions/dto.HealthCheckResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Health check
       tags:
       - health
+  /v1/links/redirect/{code}:
+    get:
+      description: Redirect to original URL.
+      parameters:
+      - description: Shortened code
+        in: path
+        name: code
+        required: true
+        type: string
+      responses:
+        "301":
+          description: Moved permanently
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Redirect to original URL
+      tags:
+      - link
   /v1/links/shorten:
     post:
       consumes:
@@ -64,22 +91,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/model.ShortenURLRequest'
+          $ref: '#/definitions/handler.ShortenURLRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/model.ShortenURLResponse'
+            $ref: '#/definitions/handler.ShortenURLResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/model.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/model.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Generate a shortened URL
       tags:
       - link

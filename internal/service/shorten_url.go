@@ -11,6 +11,7 @@ import (
 //go:generate mockery --name=ShortenURL --filename shorten_url.go --outpkg service_mocks
 type ShortenURL interface {
 	CreateShortenedLink(ctx context.Context, url string, exp time.Duration) (string, error)
+	GetURLFromCode(ctx context.Context, code string) (string, error)
 }
 
 type shortenURL struct {
@@ -44,4 +45,18 @@ func (s *shortenURL) CreateShortenedLink(ctx context.Context, url string, exp ti
 	}
 
 	return "", ErrMaxRetriesExceeded
+}
+
+var ErrURLNotFound = errors.New("URL not found")
+
+func (s *shortenURL) GetURLFromCode(ctx context.Context, code string) (string, error) {
+	url, err := s.r.GetURL(ctx, code)
+	if err != nil {
+		if errors.Is(err, repository.ErrURLNotFound) {
+			return "", ErrURLNotFound
+		}
+		return "", err
+	}
+
+	return url, nil
 }
