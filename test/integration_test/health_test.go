@@ -9,7 +9,8 @@ import (
 
 	"github.com/SonDo580/bookmark-manager/internal/api"
 	"github.com/SonDo580/bookmark-manager/internal/config"
-	"github.com/SonDo580/bookmark-manager/internal/model"
+	"github.com/SonDo580/bookmark-manager/internal/dto"
+	redisPkg "github.com/SonDo580/bookmark-manager/pkg/redis"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -56,7 +57,10 @@ func TestHealthCheck(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			testAPIEngine := api.NewEngine(tc.cfg)
+			_, mockRedisClient := redisPkg.InitMockRedis(t)
+			defer mockRedisClient.Close()
+
+			testAPIEngine := api.NewEngine(tc.cfg, mockRedisClient)
 			rec := httptest.NewRecorder()
 			req := tc.setupTestRequest()
 			testAPIEngine.ServeHTTP(rec, req)
@@ -67,13 +71,13 @@ func TestHealthCheck(t *testing.T) {
 				return
 			}
 
-			expectedResponse := model.HealthCheckResponse{
-				Message:     model.HealthStatusOK,
+			expectedResponse := dto.HealthCheckResponse{
+				Message:     dto.HealthStatusOK,
 				ServiceName: tc.cfg.ServiceName,
 				InstanceID:  tc.cfg.InstanceID,
 			}
 
-			var actualResponse model.HealthCheckResponse
+			var actualResponse dto.HealthCheckResponse
 			err := json.Unmarshal(rec.Body.Bytes(), &actualResponse)
 			require.NoError(t, err)
 

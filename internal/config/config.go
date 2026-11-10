@@ -13,8 +13,8 @@ type Config struct {
 }
 
 func Load() (*Config, error) {
-	var cfg Config
-	if err := envconfig.Process("", &cfg); err != nil {
+	cfg := &Config{}
+	if err := envconfig.Process("", cfg); err != nil {
 		return nil, err
 	}
 
@@ -22,5 +22,5 @@ func Load() (*Config, error) {
 		cfg.InstanceID = uuid.New().String()
 	}
 
-	return &cfg, nil
+	return cfg, nil
 }

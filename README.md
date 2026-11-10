@@ -2,8 +2,7 @@
 
 ## Development
 
-- Create `.env` file:
-  - Check `internal/config/config.go`.
+- Create `.env` file: check `.env.example`.
 
 - First-time installation:
 
@@ -11,16 +10,19 @@
 go mod tidy
 ```
 
-- Run the application:
+- Run the application in development mode:
 
 ```bash
-go run cmd/api/main.go
+make dev
 ```
 
-- Install extra dependencies:
+- API documentation: at `http://localhost:8080/swagger/index.html` by default.
+
+- Install extra dependencies / tools:
 
 ```bash
 go get ...
+go install ...
 ```
 
 ## Testing
@@ -36,8 +38,20 @@ type Health interface {
 // Then run: go generate
 ```
 
-- Run all tests:
+- Run all tests (with code coverage report):
 
 ```bash
-go test -v ./...
+make test
+```
+
+## Redis
+
+```bash
+# Run container
+docker run -d --name bookmark-manager-redis -p 6380:6379 redis:alpine
+# Subsequent times
+docker start bookmark-manager-redis
+
+# Use Redis CLI
+docker exec -it bookmark-manager-redis redis-cli
 ```
