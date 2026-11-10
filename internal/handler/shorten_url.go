@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/SonDo580/bookmark-manager/internal/model"
+	"github.com/SonDo580/bookmark-manager/internal/dto"
 	"github.com/SonDo580/bookmark-manager/internal/service"
 	"github.com/gin-gonic/gin"
 )
@@ -37,17 +37,17 @@ type ShortenURLResponse struct {
 // @Tags         link
 // @Accept       json
 // @Produce      json
-// @Param        request  body      model.ShortenURLRequest true "Input required"
-// @Success      201      {object}  model.ShortenURLResponse
-// @Failure      400      {object}  model.ErrorResponse
-// @Failure      500      {object}  model.ErrorResponse
+// @Param        request  body      ShortenURLRequest true "Input required"
+// @Success      201      {object}  ShortenURLResponse
+// @Failure      400      {object}  dto.ErrorResponse
+// @Failure      500      {object}  dto.ErrorResponse
 // @Router       /v1/links/shorten [post]
 func (h *shortenURL) CreateShortenedLink(c *gin.Context) {
 	input := &ShortenURLRequest{}
 	if err := c.ShouldBindJSON(input); err != nil {
 		c.AbortWithStatusJSON(
 			http.StatusBadRequest,
-			model.ErrorResponse{Error: "Invalid Input"},
+			dto.ErrorResponse{Error: "Invalid Input"},
 		)
 		return
 	}
@@ -57,7 +57,7 @@ func (h *shortenURL) CreateShortenedLink(c *gin.Context) {
 	if err != nil {
 		c.AbortWithStatusJSON(
 			http.StatusInternalServerError,
-			model.ErrorResponse{Error: "Internal Server Error"},
+			dto.ErrorResponse{Error: "Internal Server Error"},
 		)
 		return
 	}

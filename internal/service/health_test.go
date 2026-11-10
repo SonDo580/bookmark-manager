@@ -5,7 +5,7 @@ import (
 	"uuid"
 
 	"github.com/SonDo580/bookmark-manager/internal/config"
-	"github.com/SonDo580/bookmark-manager/internal/model"
+	"github.com/SonDo580/bookmark-manager/internal/dto"
 	redisPkg "github.com/SonDo580/bookmark-manager/pkg/redis"
 	"github.com/alicebob/miniredis/v2"
 	"github.com/stretchr/testify/assert"
@@ -59,8 +59,8 @@ func TestHealthCheck(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
-				expectedResponse := model.HealthCheckResponse{
-					Message:     model.HealthStatusOK,
+				expectedResponse := dto.HealthCheckResponse{
+					Message:     dto.HealthStatusOK,
 					ServiceName: tc.cfg.ServiceName,
 					InstanceID:  tc.cfg.InstanceID,
 				}

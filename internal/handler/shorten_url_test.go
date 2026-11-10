@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/SonDo580/bookmark-manager/internal/model"
+	"github.com/SonDo580/bookmark-manager/internal/dto"
 	service_mocks "github.com/SonDo580/bookmark-manager/internal/service/mocks"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -27,7 +27,7 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 	const testExpSeconds = 3600
 	const testExp = testExpSeconds * time.Second
 
-	responseInvalidInput := model.ErrorResponse{
+	responseInvalidInput := dto.ErrorResponse{
 		Error: "Invalid Input",
 	}
 
@@ -130,7 +130,7 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 					Once()
 			},
 			expectedStatus: http.StatusInternalServerError,
-			expectedResponse: model.ErrorResponse{
+			expectedResponse: dto.ErrorResponse{
 				Error: "Internal Server Error",
 			},
 		},
@@ -178,8 +178,8 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 				err := json.Unmarshal(rec.Body.Bytes(), &actualResponse)
 				require.NoError(t, err)
 				assert.Equal(t, expectedResponse, actualResponse)
-			case model.ErrorResponse:
-				var actualResponse model.ErrorResponse
+			case dto.ErrorResponse:
+				var actualResponse dto.ErrorResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &actualResponse)
 				require.NoError(t, err)
 				assert.Equal(t, expectedResponse, actualResponse)

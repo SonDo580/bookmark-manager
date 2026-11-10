@@ -9,7 +9,7 @@ import (
 	"testing"
 	"uuid"
 
-	"github.com/SonDo580/bookmark-manager/internal/model"
+	"github.com/SonDo580/bookmark-manager/internal/dto"
 	service_mocks "github.com/SonDo580/bookmark-manager/internal/service/mocks"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -21,8 +21,8 @@ func TestHealthCheck(t *testing.T) {
 
 	gin.SetMode(gin.TestMode)
 
-	successResponse := model.HealthCheckResponse{
-		Message:     model.HealthStatusOK,
+	successResponse := dto.HealthCheckResponse{
+		Message:     dto.HealthStatusOK,
 		ServiceName: "bookmark_service",
 		InstanceID:  uuid.New().String(),
 	}
@@ -47,11 +47,11 @@ func TestHealthCheck(t *testing.T) {
 			name: "fail: redis down",
 			setupMocks: func(mockSvc *service_mocks.Health, ctx context.Context) {
 				mockSvc.On("Check", ctx).
-					Return(model.HealthCheckResponse{}, errors.New("redis down")).
+					Return(dto.HealthCheckResponse{}, errors.New("redis down")).
 					Once()
 			},
 			expectedStatus: http.StatusInternalServerError,
-			expectedResponse: model.ErrorResponse{
+			expectedResponse: dto.ErrorResponse{
 				Error: "Internal Server Error",
 			},
 		},
@@ -81,13 +81,13 @@ func TestHealthCheck(t *testing.T) {
 
 			// Assert response body
 			switch expectedResponse := tc.expectedResponse.(type) {
-			case model.HealthCheckResponse:
-				var actualResponse model.HealthCheckResponse
+			case dto.HealthCheckResponse:
+				var actualResponse dto.HealthCheckResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &actualResponse)
 				require.NoError(t, err)
 				assert.Equal(t, expectedResponse, actualResponse)
-			case model.ErrorResponse:
-				var actualResponse model.ErrorResponse
+			case dto.ErrorResponse:
+				var actualResponse dto.ErrorResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &actualResponse)
 				require.NoError(t, err)
 				assert.Equal(t, expectedResponse, actualResponse)

@@ -10,8 +10,8 @@ import (
 
 	"github.com/SonDo580/bookmark-manager/internal/api"
 	"github.com/SonDo580/bookmark-manager/internal/config"
+	"github.com/SonDo580/bookmark-manager/internal/dto"
 	"github.com/SonDo580/bookmark-manager/internal/handler"
-	"github.com/SonDo580/bookmark-manager/internal/model"
 	"github.com/SonDo580/bookmark-manager/internal/service"
 	redisPkg "github.com/SonDo580/bookmark-manager/pkg/redis"
 	"github.com/stretchr/testify/assert"
@@ -100,7 +100,7 @@ func TestShortenURL(t *testing.T) {
 				assert.NotEmpty(t, actualResponse.Code)
 				assert.Equal(t, service.DefaultCodeLength, len(actualResponse.Code))
 			case http.StatusBadRequest:
-				var actualResponse model.ErrorResponse
+				var actualResponse dto.ErrorResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &actualResponse)
 				require.NoError(t, err)
 

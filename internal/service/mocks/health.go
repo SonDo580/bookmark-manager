@@ -5,7 +5,7 @@ package service_mocks
 import (
 	context "context"
 
-	model "github.com/SonDo580/bookmark-manager/internal/model"
+	dto "github.com/SonDo580/bookmark-manager/internal/dto"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -15,22 +15,22 @@ type Health struct {
 }
 
 // Check provides a mock function with given fields: ctx
-func (_m *Health) Check(ctx context.Context) (model.HealthCheckResponse, error) {
+func (_m *Health) Check(ctx context.Context) (dto.HealthCheckResponse, error) {
 	ret := _m.Called(ctx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Check")
 	}
 
-	var r0 model.HealthCheckResponse
+	var r0 dto.HealthCheckResponse
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context) (model.HealthCheckResponse, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context) (dto.HealthCheckResponse, error)); ok {
 		return rf(ctx)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context) model.HealthCheckResponse); ok {
+	if rf, ok := ret.Get(0).(func(context.Context) dto.HealthCheckResponse); ok {
 		r0 = rf(ctx)
 	} else {
-		r0 = ret.Get(0).(model.HealthCheckResponse)
+		r0 = ret.Get(0).(dto.HealthCheckResponse)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
