@@ -46,12 +46,8 @@ make test
 
 ## Redis
 
-```bash
-# Run container
-docker run -d --name bookmark-manager-redis -p 6380:6379 redis:alpine
-# Subsequent times
-docker start bookmark-manager-redis
+- Use Redis CLI:
 
-# Use Redis CLI
-docker exec -it bookmark-manager-redis redis-cli
+```bash
+docker exec -it bookmark-service-redis redis-cli
 ```
