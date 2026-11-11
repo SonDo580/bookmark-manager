@@ -7,6 +7,7 @@ import (
 	redisPkg "github.com/SonDo580/bookmark-manager/pkg/redis"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestURLStorage_StoreURL(t *testing.T) {
@@ -70,6 +71,58 @@ func TestURLStorage_StoreURL(t *testing.T) {
 				res, err = mockRedisClient.Get(ctx, tc.key).Result()
 				assert.ErrorIs(t, err, redis.Nil)
 			}
+		})
+	}
+}
+
+func TestURLStorage_GetURL(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name string
+		key  string
+		url  string
+		exp  time.Duration
+	}{
+		{
+			name: "normal case",
+			key:  "abc1234",
+			url:  "https://google.com",
+			exp:  0,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			ctx := t.Context()
+
+			mockRedisServer, mockRedisClient := redisPkg.InitMockRedis(t)
+			defer mockRedisClient.Close()
+
+			testRepo := NewURLStorage(mockRedisClient)
+
+			// Store
+			err := mockRedisClient.Set(ctx, tc.key, tc.url, tc.exp).Err()
+			require.NoError(t, err)
+
+			// Get stored key
+			url, err := testRepo.GetURL(ctx, tc.key)
+			assert.NoError(t, err)
+			assert.Equal(t, tc.url, url)
+
+			// Get non-existent key
+			url, err = testRepo.GetURL(ctx, tc.key+"x")
+			assert.Empty(t, url)
+			assert.ErrorIs(t, err, ErrURLNotFound)
+
+			// Trigger other error (not redis.Nil)
+			mockRedisServer.SetError("any")
+			url, err = testRepo.GetURL(ctx, tc.key)
+			assert.Empty(t, url)
+			assert.Error(t, err)
+			assert.NotErrorIs(t, err, ErrURLNotFound)
+			mockRedisServer.SetError("")
 		})
 	}
 }
