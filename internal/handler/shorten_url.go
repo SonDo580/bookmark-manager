@@ -2,6 +2,8 @@ package handler
 
 import (
 	"errors"
+	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -57,6 +59,8 @@ func (h *shortenURL) CreateShortenedLink(c *gin.Context) {
 	exp := time.Duration(input.ExpSeconds) * time.Second
 	code, err := h.svc.CreateShortenedLink(c, input.URL, exp)
 	if err != nil {
+		log.Println(fmt.Errorf("CreateShortenedLink failed: %w", err).Error())
+
 		c.AbortWithStatusJSON(
 			http.StatusInternalServerError,
 			dto.ErrorResponse{Error: "Internal Server Error"},
@@ -101,6 +105,8 @@ func (h *shortenURL) Redirect(c *gin.Context) {
 			)
 			return
 		}
+
+		log.Println(fmt.Errorf("Redirect failed: %w", err).Error())
 
 		c.AbortWithStatusJSON(
 			http.StatusInternalServerError,

@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/SonDo580/bookmark-manager/internal/dto"
@@ -31,6 +33,8 @@ func NewHealth(svc service.Health) Health {
 func (h *health) HealthCheck(c *gin.Context) {
 	response, err := h.svc.Check(c)
 	if err != nil {
+		log.Println(fmt.Errorf("HealthCheck failed: %w", err).Error())
+
 		c.AbortWithStatusJSON(
 			http.StatusInternalServerError,
 			dto.ErrorResponse{Error: "Internal Server Error"},
