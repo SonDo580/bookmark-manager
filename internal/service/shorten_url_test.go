@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -8,7 +9,6 @@ import (
 	repository_mocks "github.com/SonDo580/bookmark-manager/internal/repository/mocks"
 	service_mocks "github.com/SonDo580/bookmark-manager/internal/service/mocks"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 func TestShortenURL_CreateShortenedLink(t *testing.T) {
@@ -23,36 +23,36 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 
 	testCases := []struct {
 		name         string
-		setupMocks   func(*repository_mocks.URLStorage, *service_mocks.GenCode)
+		setupMocks   func(ctx context.Context, mockRepo *repository_mocks.URLStorage, mockGenCode *service_mocks.GenCode)
 		expectedCode string
 		expectedErr  error
 	}{
 		{
 			name: "success",
-			setupMocks: func(mockRepo *repository_mocks.URLStorage, mockGenCode *service_mocks.GenCode) {
+			setupMocks: func(ctx context.Context, mockRepo *repository_mocks.URLStorage, mockGenCode *service_mocks.GenCode) {
 				mockGenCode.On("GenerateCode", DefaultCodeLength).Return(testCode, nil).Once()
-				mockRepo.On("StoreURL", mock.Anything, testCode, testURL, testExp).Return(true, nil).Once()
+				mockRepo.On("StoreURL", ctx, testCode, testURL, testExp).Return(true, nil).Once()
 			},
 			expectedCode: testCode,
 			expectedErr:  nil,
 		},
 		{
 			name: "success: retry on collision",
-			setupMocks: func(mockRepo *repository_mocks.URLStorage, mockGenCode *service_mocks.GenCode) {
+			setupMocks: func(ctx context.Context, mockRepo *repository_mocks.URLStorage, mockGenCode *service_mocks.GenCode) {
 				// Collide
 				mockGenCode.On("GenerateCode", DefaultCodeLength).Return(testCode, nil).Once()
-				mockRepo.On("StoreURL", mock.Anything, testCode, testURL, testExp).Return(false, nil).Once()
+				mockRepo.On("StoreURL", ctx, testCode, testURL, testExp).Return(false, nil).Once()
 
 				// Retry
 				mockGenCode.On("GenerateCode", DefaultCodeLength).Return(testCode, nil).Once()
-				mockRepo.On("StoreURL", mock.Anything, testCode, testURL, testExp).Return(true, nil).Once()
+				mockRepo.On("StoreURL", ctx, testCode, testURL, testExp).Return(true, nil).Once()
 			},
 			expectedCode: testCode,
 			expectedErr:  nil,
 		},
 		{
 			name: "fail: code generation error",
-			setupMocks: func(mockRepo *repository_mocks.URLStorage, mockGenCode *service_mocks.GenCode) {
+			setupMocks: func(ctx context.Context, mockRepo *repository_mocks.URLStorage, mockGenCode *service_mocks.GenCode) {
 				mockGenCode.On("GenerateCode", DefaultCodeLength).Return("", errGenCode).Once()
 			},
 			expectedCode: "",
@@ -60,18 +60,18 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 		},
 		{
 			name: "fail: storage error",
-			setupMocks: func(mockRepo *repository_mocks.URLStorage, mockGenCode *service_mocks.GenCode) {
+			setupMocks: func(ctx context.Context, mockRepo *repository_mocks.URLStorage, mockGenCode *service_mocks.GenCode) {
 				mockGenCode.On("GenerateCode", DefaultCodeLength).Return(testCode, nil).Once()
-				mockRepo.On("StoreURL", mock.Anything, testCode, testURL, testExp).Return(false, errStore).Once()
+				mockRepo.On("StoreURL", ctx, testCode, testURL, testExp).Return(false, errStore).Once()
 			},
 			expectedCode: "",
 			expectedErr:  errStore,
 		},
 		{
 			name: "fail: exhaust max retries",
-			setupMocks: func(mockRepo *repository_mocks.URLStorage, mockGenCode *service_mocks.GenCode) {
+			setupMocks: func(ctx context.Context, mockRepo *repository_mocks.URLStorage, mockGenCode *service_mocks.GenCode) {
 				mockGenCode.On("GenerateCode", DefaultCodeLength).Return(testCode, nil).Times(MaxRetries)
-				mockRepo.On("StoreURL", mock.Anything, testCode, testURL, testExp).Return(false, nil).Times(MaxRetries)
+				mockRepo.On("StoreURL", ctx, testCode, testURL, testExp).Return(false, nil).Times(MaxRetries)
 			},
 			expectedCode: "",
 			expectedErr:  ErrMaxRetriesExceeded,
@@ -82,13 +82,14 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
+			ctx := t.Context()
+
 			mockGenCode := service_mocks.NewGenCode(t)
 			mockRepo := repository_mocks.NewURLStorage(t)
-			tc.setupMocks(mockRepo, mockGenCode)
+			tc.setupMocks(ctx, mockRepo, mockGenCode)
 
 			svc := NewShortenURL(mockRepo, mockGenCode)
 
-			ctx := t.Context()
 			code, err := svc.CreateShortenedLink(ctx, testURL, testExp)
 
 			assert.Equal(t, tc.expectedCode, code)
@@ -116,15 +117,15 @@ func TestShortenURL_GetURLFromCode(t *testing.T) {
 	testCases := []struct {
 		name        string
 		code        string
-		setupMocks  func(*repository_mocks.URLStorage)
+		setupMocks  func(ctx context.Context, mockRepo *repository_mocks.URLStorage)
 		expectedURL string
 		expectedErr error
 	}{
 		{
 			name: "success",
 			code: testCode,
-			setupMocks: func(mockRepo *repository_mocks.URLStorage) {
-				mockRepo.On("GetURL", mock.Anything, testCode).
+			setupMocks: func(ctx context.Context, mockRepo *repository_mocks.URLStorage) {
+				mockRepo.On("GetURL", ctx, testCode).
 					Return(testURL, nil).Once()
 			},
 			expectedURL: testURL,
@@ -133,8 +134,8 @@ func TestShortenURL_GetURLFromCode(t *testing.T) {
 		{
 			name: "fail: URL not found",
 			code: testCode,
-			setupMocks: func(mockRepo *repository_mocks.URLStorage) {
-				mockRepo.On("GetURL", mock.Anything, testCode).
+			setupMocks: func(ctx context.Context, mockRepo *repository_mocks.URLStorage) {
+				mockRepo.On("GetURL", ctx, testCode).
 					Return("", ErrURLNotFound).Once()
 			},
 			expectedURL: "",
@@ -143,8 +144,8 @@ func TestShortenURL_GetURLFromCode(t *testing.T) {
 		{
 			name: "fail: other error",
 			code: testCode,
-			setupMocks: func(mockRepo *repository_mocks.URLStorage) {
-				mockRepo.On("GetURL", mock.Anything, testCode).
+			setupMocks: func(ctx context.Context, mockRepo *repository_mocks.URLStorage) {
+				mockRepo.On("GetURL", ctx, testCode).
 					Return("", errGetURL).Once()
 			},
 			expectedURL: "",
@@ -156,13 +157,14 @@ func TestShortenURL_GetURLFromCode(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
+			ctx := t.Context()
+
 			mockGenCode := service_mocks.NewGenCode(t)
 			mockRepo := repository_mocks.NewURLStorage(t)
-			tc.setupMocks(mockRepo)
+			tc.setupMocks(ctx, mockRepo)
 
 			svc := NewShortenURL(mockRepo, mockGenCode)
 
-			ctx := t.Context()
 			url, err := svc.GetURLFromCode(ctx, tc.code)
 
 			assert.Equal(t, tc.expectedURL, url)
