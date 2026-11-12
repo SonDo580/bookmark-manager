@@ -3,10 +3,13 @@
 swagger:
 	swag init -g cmd/api/main.go
 
+services:
+	docker compose up -d redis
+
 run:
 	go run cmd/api/main.go
 
-dev: swagger run
+dev: swagger services run
 
 COVERAGE_EXCLUDE=mocks|main.go|test
 

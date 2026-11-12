@@ -11,12 +11,15 @@ import (
 	"github.com/SonDo580/bookmark-manager/internal/config"
 	"github.com/SonDo580/bookmark-manager/internal/dto"
 	redisPkg "github.com/SonDo580/bookmark-manager/pkg/redis"
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestHealthCheck(t *testing.T) {
 	t.Parallel()
+
+	gin.SetMode(gin.TestMode)
 
 	testCases := []struct {
 		name               string

@@ -14,12 +14,15 @@ import (
 	"github.com/SonDo580/bookmark-manager/internal/handler"
 	"github.com/SonDo580/bookmark-manager/internal/service"
 	redisPkg "github.com/SonDo580/bookmark-manager/pkg/redis"
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestShortenURL(t *testing.T) {
+func TestShortenURL_CreateShortenedLink(t *testing.T) {
 	t.Parallel()
+
+	gin.SetMode(gin.TestMode)
 
 	cfg := &config.Config{
 		ServiceName: "bookmark_service",
@@ -105,6 +108,76 @@ func TestShortenURL(t *testing.T) {
 				require.NoError(t, err)
 
 				assert.Equal(t, tc.expectedErrMsg, actualResponse.Error)
+			}
+		})
+	}
+}
+
+func TestShortenURL_Redirect(t *testing.T) {
+	t.Parallel()
+
+	gin.SetMode(gin.TestMode)
+
+	cfg := &config.Config{
+		ServiceName: "bookmark_service",
+		InstanceID:  uuid.New().String(),
+		Port:        8080,
+	}
+
+	const testCode = "abc1234"
+	const testURL = "https://google.com"
+
+	testCases := []struct {
+		name           string
+		codeParam      string
+		expectedStatus int
+		expectedURL    string
+		expectedErrMsg string
+	}{
+		{
+			name:           "success",
+			codeParam:      testCode,
+			expectedStatus: http.StatusMovedPermanently,
+			expectedURL:    testURL,
+		},
+		{
+			name:           "fail: URL not found",
+			codeParam:      testCode + "x",
+			expectedStatus: http.StatusBadRequest,
+			expectedErrMsg: "URL not found",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			_, mockRedisClient := redisPkg.InitMockRedis(t)
+			defer mockRedisClient.Close()
+
+			// Store code-to-URL mapping
+			ctx := t.Context()
+			err := mockRedisClient.Set(ctx, testCode, testURL, 0).Err()
+			require.NoError(t, err)
+
+			testAPIEngine := api.NewEngine(cfg, mockRedisClient)
+			rec := httptest.NewRecorder()
+			endpoint := "/v1/links/redirect/" + tc.codeParam
+			req := httptest.NewRequest(http.MethodGet, endpoint, nil)
+			testAPIEngine.ServeHTTP(rec, req)
+
+			assert.Equal(t, tc.expectedStatus, rec.Code)
+
+			if tc.expectedURL != "" {
+				assert.Equal(t, tc.expectedURL, rec.Header().Get("Location"))
+			}
+
+			if tc.expectedErrMsg != "" {
+				var response dto.ErrorResponse
+				err := json.Unmarshal(rec.Body.Bytes(), &response)
+				require.NoError(t, err)
+
+				assert.Equal(t, tc.expectedErrMsg, response.Error)
 			}
 		})
 	}

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/SonDo580/bookmark-manager/internal/dto"
+	"github.com/SonDo580/bookmark-manager/internal/service"
 	service_mocks "github.com/SonDo580/bookmark-manager/internal/service/mocks"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -186,6 +187,104 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 			}
 
 			// Verify all mock expectations are met
+			mockSvc.AssertExpectations(t)
+		})
+	}
+}
+
+func TestShortenURL_Redirect(t *testing.T) {
+	t.Parallel()
+
+	gin.SetMode(gin.TestMode)
+
+	const testCode = "abc1234"
+	const testURL = "https://google.com"
+
+	testCases := []struct {
+		name             string
+		codeParam        string
+		setupMocks       func(ctx context.Context, mockSvc *service_mocks.ShortenURL)
+		expectedStatus   int
+		expectedURL      string
+		expectedResponse any
+	}{
+		{
+			name:      "success",
+			codeParam: testCode,
+			setupMocks: func(ctx context.Context, mockSvc *service_mocks.ShortenURL) {
+				mockSvc.On("GetURLFromCode", ctx, testCode).
+					Return(testURL, nil).
+					Once()
+			},
+			expectedStatus: http.StatusMovedPermanently,
+			expectedURL:    testURL,
+		},
+		{
+			name:             "fail: empty code",
+			codeParam:        "",
+			setupMocks:       func(ctx context.Context, mockSvc *service_mocks.ShortenURL) {},
+			expectedStatus:   http.StatusBadRequest,
+			expectedResponse: dto.ErrorResponse{Error: "Invalid Input"},
+		},
+		{
+			name:      "fail: URL not found",
+			codeParam: testCode,
+			setupMocks: func(ctx context.Context, mockSvc *service_mocks.ShortenURL) {
+				mockSvc.On("GetURLFromCode", ctx, testCode).
+					Return("", service.ErrURLNotFound).
+					Once()
+			},
+			expectedStatus:   http.StatusBadRequest,
+			expectedResponse: dto.ErrorResponse{Error: "URL not found"},
+		},
+		{
+			name:      "fail: internal server error",
+			codeParam: testCode,
+			setupMocks: func(ctx context.Context, mockSvc *service_mocks.ShortenURL) {
+				mockSvc.On("GetURLFromCode", ctx, testCode).
+					Return("", errors.New("any")).
+					Once()
+			},
+			expectedStatus:   http.StatusInternalServerError,
+			expectedResponse: dto.ErrorResponse{Error: "Internal Server Error"},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			rec := httptest.NewRecorder()
+			ginCtx, _ := gin.CreateTestContext(rec)
+
+			endpoint := "/v1/links/redirect/" + tc.codeParam
+			ginCtx.Request = httptest.NewRequest(http.MethodGet, endpoint, nil)
+			if tc.codeParam != "" {
+				ginCtx.Params = gin.Params{{Key: "code", Value: tc.codeParam}}
+			}
+
+			mockSvc := service_mocks.NewShortenURL(t)
+			tc.setupMocks(ginCtx, mockSvc)
+			handler := NewShortenURL(mockSvc)
+
+			handler.Redirect(ginCtx)
+
+			assert.Equal(t, tc.expectedStatus, rec.Code)
+
+			if tc.expectedURL != "" {
+				assert.Equal(t, tc.expectedURL, rec.Header().Get("Location"))
+			}
+
+			if tc.expectedResponse != nil {
+				switch expectedResponse := tc.expectedResponse.(type) {
+				case dto.ErrorResponse:
+					var actualResponse dto.ErrorResponse
+					err := json.Unmarshal(rec.Body.Bytes(), &actualResponse)
+					require.NoError(t, err)
+					assert.Equal(t, expectedResponse, actualResponse)
+				}
+			}
+
 			mockSvc.AssertExpectations(t)
 		})
 	}

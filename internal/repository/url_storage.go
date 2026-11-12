@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -25,6 +26,16 @@ func (r *urlStorage) StoreURL(ctx context.Context, key string, url string, exp t
 	return r.c.SetNX(ctx, key, url, exp).Result()
 }
 
+var ErrURLNotFound = errors.New("URL not found")
+
 func (r *urlStorage) GetURL(ctx context.Context, key string) (string, error) {
-	return r.c.Get(ctx, key).Result()
+	url, err := r.c.Get(ctx, key).Result()
+	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return "", ErrURLNotFound
+		}
+		return "", err
+	}
+
+	return url, nil
 }

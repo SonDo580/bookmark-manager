@@ -48,8 +48,11 @@ func (e *engine) initRoutes() {
 	shortenURLHandler := handler.NewShortenURL(shortenURLSvc)
 
 	e.app.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
 	e.app.GET("/health-check", healthHandler.HealthCheck)
+
 	e.app.POST("/v1/links/shorten", shortenURLHandler.CreateShortenedLink)
+	e.app.GET("/v1/links/redirect/:code", shortenURLHandler.Redirect)
 }
 
 func (e *engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {

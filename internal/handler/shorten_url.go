@@ -1,6 +1,9 @@
 package handler
 
 import (
+	"errors"
+	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -11,6 +14,7 @@ import (
 
 type ShortenURL interface {
 	CreateShortenedLink(c *gin.Context)
+	Redirect(c *gin.Context)
 }
 
 type shortenURL struct {
@@ -55,6 +59,8 @@ func (h *shortenURL) CreateShortenedLink(c *gin.Context) {
 	exp := time.Duration(input.ExpSeconds) * time.Second
 	code, err := h.svc.CreateShortenedLink(c, input.URL, exp)
 	if err != nil {
+		log.Println(fmt.Errorf("CreateShortenedLink failed: %w", err).Error())
+
 		c.AbortWithStatusJSON(
 			http.StatusInternalServerError,
 			dto.ErrorResponse{Error: "Internal Server Error"},
@@ -69,4 +75,45 @@ func (h *shortenURL) CreateShortenedLink(c *gin.Context) {
 			Message: "Shorten URL generated successfully!",
 		},
 	)
+}
+
+// Redirect godoc
+// @Summary      Redirect to original URL
+// @Description  Redirect to original URL.
+// @Tags         link
+// @Param        code   path		string true "Shortened code"
+// @Success      301    {string}	string "Moved permanently"
+// @Failure      400    {object}  	dto.ErrorResponse
+// @Failure      500    {object}  	dto.ErrorResponse
+// @Router       /v1/links/redirect/{code} [get]
+func (h *shortenURL) Redirect(c *gin.Context) {
+	code := c.Param("code")
+	if code == "" {
+		c.AbortWithStatusJSON(
+			http.StatusBadRequest,
+			dto.ErrorResponse{Error: "Invalid Input"},
+		)
+		return
+	}
+
+	url, err := h.svc.GetURLFromCode(c, code)
+	if err != nil {
+		if errors.Is(err, service.ErrURLNotFound) {
+			c.AbortWithStatusJSON(
+				http.StatusBadRequest,
+				dto.ErrorResponse{Error: "URL not found"},
+			)
+			return
+		}
+
+		log.Println(fmt.Errorf("Redirect failed: %w", err).Error())
+
+		c.AbortWithStatusJSON(
+			http.StatusInternalServerError,
+			dto.ErrorResponse{Error: "Internal Server Error"},
+		)
+		return
+	}
+
+	c.Redirect(http.StatusMovedPermanently, url)
 }

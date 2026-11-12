@@ -29,7 +29,51 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.HealthCheckResponse"
+                            "$ref": "#/definitions/dto.HealthCheckResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/links/redirect/{code}": {
+            "get": {
+                "description": "Redirect to original URL.",
+                "tags": [
+                    "link"
+                ],
+                "summary": "Redirect to original URL",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Shortened code",
+                        "name": "code",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "301": {
+                        "description": "Moved permanently",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -55,7 +99,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.ShortenURLRequest"
+                            "$ref": "#/definitions/handler.ShortenURLRequest"
                         }
                     }
                 ],
@@ -63,19 +107,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/model.ShortenURLResponse"
+                            "$ref": "#/definitions/handler.ShortenURLResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/model.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/model.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -83,7 +127,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "model.ErrorResponse": {
+        "dto.ErrorResponse": {
             "type": "object",
             "properties": {
                 "error": {
@@ -91,41 +135,37 @@ const docTemplate = `{
                 }
             }
         },
-        "model.HealthCheckResponse": {
+        "dto.HealthCheckResponse": {
             "type": "object",
             "properties": {
                 "instance_id": {
                     "type": "string"
                 },
                 "message": {
-                    "$ref": "#/definitions/model.HealthStatus"
+                    "type": "string"
                 },
                 "service_name": {
                     "type": "string"
                 }
             }
         },
-        "model.HealthStatus": {
-            "type": "string",
-            "enum": [
-                "OK"
-            ],
-            "x-enum-varnames": [
-                "HealthStatusOK"
-            ]
-        },
-        "model.ShortenURLRequest": {
+        "handler.ShortenURLRequest": {
             "type": "object",
+            "required": [
+                "url"
+            ],
             "properties": {
                 "exp_seconds": {
-                    "type": "integer"
+                    "type": "integer",
+                    "maximum": 86400,
+                    "minimum": 0
                 },
                 "url": {
                     "type": "string"
                 }
             }
         },
-        "model.ShortenURLResponse": {
+        "handler.ShortenURLResponse": {
             "type": "object",
             "properties": {
                 "code": {
