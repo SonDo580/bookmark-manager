@@ -70,7 +70,10 @@ docker exec -it bookmark-service-redis redis-cli
 - Build the image:
 
 ```bash
-docker build -t sondo580/bookmark-service:<tag> .
+# use default tag (latest)
+make docker-build
+# OR with specific version tag
+make docker-build TAG=v1.0.0
 ```
 
 - Login to Docker Hub:
@@ -79,8 +82,20 @@ docker build -t sondo580/bookmark-service:<tag> .
 docker login
 ```
 
-- Push the image to DockerHub:
+- Push the image to Docker Hub:
 
 ```bash
-docker push sondo580/bookmark-service:<tag>
+# use default tag (latest)
+make docker-push
+# OR with specific version tag
+make docker-push TAG=v1.0.0
+```
+
+- Build and push in 1 go _(make sure to login first)_:
+
+```bash
+# use default tag (latest)
+make docker-release
+# OR with specific version tag
+make docker-release TAG=v1.0.0
 ```

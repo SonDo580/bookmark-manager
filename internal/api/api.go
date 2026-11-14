@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/SonDo580/bookmark-manager/docs"
 	"github.com/SonDo580/bookmark-manager/internal/config"
 	"github.com/SonDo580/bookmark-manager/internal/handler"
 	"github.com/SonDo580/bookmark-manager/internal/repository"
@@ -47,6 +48,7 @@ func (e *engine) initRoutes() {
 	shortenURLSvc := service.NewShortenURL(urlStorageRepo, genCodeSvc)
 	shortenURLHandler := handler.NewShortenURL(shortenURLSvc)
 
+	docs.SwaggerInfo.BasePath = e.cfg.BasePath
 	e.app.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	e.app.GET("/health-check", healthHandler.HealthCheck)
