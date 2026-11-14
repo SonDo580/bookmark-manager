@@ -107,7 +107,7 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 				err := json.Unmarshal(rec.Body.Bytes(), &actualResponse)
 				require.NoError(t, err)
 
-				assert.Equal(t, tc.expectedErrMsg, actualResponse.Error)
+				assert.Equal(t, tc.expectedErrMsg, actualResponse.Message)
 			}
 		})
 	}
@@ -173,11 +173,11 @@ func TestShortenURL_Redirect(t *testing.T) {
 			}
 
 			if tc.expectedErrMsg != "" {
-				var response dto.ErrorResponse
-				err := json.Unmarshal(rec.Body.Bytes(), &response)
+				var resp dto.ErrorResponse
+				err := json.Unmarshal(rec.Body.Bytes(), &resp)
 				require.NoError(t, err)
 
-				assert.Equal(t, tc.expectedErrMsg, response.Error)
+				assert.Equal(t, tc.expectedErrMsg, resp.Message)
 			}
 		})
 	}

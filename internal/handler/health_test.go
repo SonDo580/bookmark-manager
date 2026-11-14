@@ -52,7 +52,7 @@ func TestHealthCheck(t *testing.T) {
 			},
 			expectedStatus: http.StatusInternalServerError,
 			expectedResponse: dto.ErrorResponse{
-				Error: "Internal Server Error",
+				Message: "Internal Server Error",
 			},
 		},
 	}

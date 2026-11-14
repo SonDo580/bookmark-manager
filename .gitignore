@@ -3,3 +3,5 @@
 .env
 coverage.*
 **/__debug*
+
+todo.md

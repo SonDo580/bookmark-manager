@@ -9,6 +9,7 @@ import (
 
 	"github.com/SonDo580/bookmark-manager/internal/dto"
 	"github.com/SonDo580/bookmark-manager/internal/service"
+	"github.com/SonDo580/bookmark-manager/pkg/response"
 	"github.com/gin-gonic/gin"
 )
 
@@ -51,7 +52,7 @@ func (h *shortenURL) CreateShortenedLink(c *gin.Context) {
 	if err := c.ShouldBindJSON(input); err != nil {
 		c.AbortWithStatusJSON(
 			http.StatusBadRequest,
-			dto.ErrorResponse{Error: "Invalid Input"},
+			response.InputFieldError(err),
 		)
 		return
 	}
@@ -63,7 +64,7 @@ func (h *shortenURL) CreateShortenedLink(c *gin.Context) {
 
 		c.AbortWithStatusJSON(
 			http.StatusInternalServerError,
-			dto.ErrorResponse{Error: "Internal Server Error"},
+			dto.ErrorResponse{Message: "Internal Server Error"},
 		)
 		return
 	}
@@ -91,7 +92,7 @@ func (h *shortenURL) Redirect(c *gin.Context) {
 	if code == "" {
 		c.AbortWithStatusJSON(
 			http.StatusBadRequest,
-			dto.ErrorResponse{Error: "Invalid Input"},
+			dto.ErrorResponse{Message: "Invalid Input"},
 		)
 		return
 	}
@@ -101,7 +102,7 @@ func (h *shortenURL) Redirect(c *gin.Context) {
 		if errors.Is(err, service.ErrURLNotFound) {
 			c.AbortWithStatusJSON(
 				http.StatusBadRequest,
-				dto.ErrorResponse{Error: "URL not found"},
+				dto.ErrorResponse{Message: "URL not found"},
 			)
 			return
 		}
@@ -110,7 +111,7 @@ func (h *shortenURL) Redirect(c *gin.Context) {
 
 		c.AbortWithStatusJSON(
 			http.StatusInternalServerError,
-			dto.ErrorResponse{Error: "Internal Server Error"},
+			dto.ErrorResponse{Message: "Internal Server Error"},
 		)
 		return
 	}

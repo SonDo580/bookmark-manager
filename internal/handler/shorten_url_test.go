@@ -28,23 +28,20 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 	const testExpSeconds = 3600
 	const testExp = testExpSeconds * time.Second
 
-	responseInvalidInput := dto.ErrorResponse{
-		Error: "Invalid Input",
-	}
-
-	responseSuccess := func(code string) ShortenURLResponse {
-		return ShortenURLResponse{
+	responseSuccess := func(code string) *ShortenURLResponse {
+		return &ShortenURLResponse{
 			Code:    code,
 			Message: "Shorten URL generated successfully!",
 		}
 	}
 
 	testCases := []struct {
-		name             string
-		input            any
-		setupMocks       func(mockSvc *service_mocks.ShortenURL, ctx context.Context)
-		expectedStatus   int
-		expectedResponse any
+		name            string
+		input           any
+		setupMocks      func(mockSvc *service_mocks.ShortenURL, ctx context.Context)
+		expectedStatus  int
+		successResponse *ShortenURLResponse
+		expectedErrMsg  string
 	}{
 		{
 			name: "success",
@@ -57,15 +54,15 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 					Return(testCode, nil).
 					Once()
 			},
-			expectedStatus:   http.StatusCreated,
-			expectedResponse: responseSuccess(testCode),
+			expectedStatus:  http.StatusCreated,
+			successResponse: responseSuccess(testCode),
 		},
 		{
-			name:             "fail: malformed input",
-			input:            "{invalid-json",
-			setupMocks:       func(mockSvc *service_mocks.ShortenURL, ctx context.Context) {},
-			expectedStatus:   http.StatusBadRequest,
-			expectedResponse: responseInvalidInput,
+			name:           "fail: malformed input",
+			input:          "{invalid-json",
+			setupMocks:     func(mockSvc *service_mocks.ShortenURL, ctx context.Context) {},
+			expectedStatus: http.StatusBadRequest,
+			expectedErrMsg: "Invalid Input",
 		},
 		{
 			name: "fail: wrong input field types",
@@ -73,18 +70,18 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 				"url":         1234,
 				"exp_seconds": "NaN",
 			},
-			setupMocks:       func(mockSvc *service_mocks.ShortenURL, ctx context.Context) {},
-			expectedStatus:   http.StatusBadRequest,
-			expectedResponse: responseInvalidInput,
+			setupMocks:     func(mockSvc *service_mocks.ShortenURL, ctx context.Context) {},
+			expectedStatus: http.StatusBadRequest,
+			expectedErrMsg: "Invalid Input",
 		},
 		{
 			name: "fail: missing required url",
 			input: ShortenURLRequest{
 				ExpSeconds: 3600,
 			},
-			setupMocks:       func(mockSvc *service_mocks.ShortenURL, ctx context.Context) {},
-			expectedStatus:   http.StatusBadRequest,
-			expectedResponse: responseInvalidInput,
+			setupMocks:     func(mockSvc *service_mocks.ShortenURL, ctx context.Context) {},
+			expectedStatus: http.StatusBadRequest,
+			expectedErrMsg: "Invalid Input",
 		},
 		{
 			name: "fail: negative exp_seconds",
@@ -92,9 +89,9 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 				URL:        testURL,
 				ExpSeconds: -10,
 			},
-			setupMocks:       func(mockSvc *service_mocks.ShortenURL, ctx context.Context) {},
-			expectedStatus:   http.StatusBadRequest,
-			expectedResponse: responseInvalidInput,
+			setupMocks:     func(mockSvc *service_mocks.ShortenURL, ctx context.Context) {},
+			expectedStatus: http.StatusBadRequest,
+			expectedErrMsg: "Invalid Input",
 		},
 		{
 			name: "fail: exceed exp_seconds limit",
@@ -102,9 +99,9 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 				URL:        testURL,
 				ExpSeconds: 86400 + 1,
 			},
-			setupMocks:       func(mockSvc *service_mocks.ShortenURL, ctx context.Context) {},
-			expectedStatus:   http.StatusBadRequest,
-			expectedResponse: responseInvalidInput,
+			setupMocks:     func(mockSvc *service_mocks.ShortenURL, ctx context.Context) {},
+			expectedStatus: http.StatusBadRequest,
+			expectedErrMsg: "Invalid Input",
 		},
 		{
 			name: "success: omit optional exp_seconds",
@@ -116,8 +113,8 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 					Return(testCode, nil).
 					Once()
 			},
-			expectedStatus:   http.StatusCreated,
-			expectedResponse: responseSuccess(testCode),
+			expectedStatus:  http.StatusCreated,
+			successResponse: responseSuccess(testCode),
 		},
 		{
 			name: "fail: service error",
@@ -131,9 +128,7 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 					Once()
 			},
 			expectedStatus: http.StatusInternalServerError,
-			expectedResponse: dto.ErrorResponse{
-				Error: "Internal Server Error",
-			},
+			expectedErrMsg: "Internal Server Error",
 		},
 	}
 
@@ -173,17 +168,19 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 			assert.Equal(t, tc.expectedStatus, rec.Code)
 
 			// Assert response body
-			switch expectedResponse := tc.expectedResponse.(type) {
-			case ShortenURLResponse:
-				var actualResponse ShortenURLResponse
-				err := json.Unmarshal(rec.Body.Bytes(), &actualResponse)
+			if tc.successResponse != nil {
+				assert.Equal(t, tc.expectedErrMsg, "")
+				var resp ShortenURLResponse
+				err := json.Unmarshal(rec.Body.Bytes(), &resp)
 				require.NoError(t, err)
-				assert.Equal(t, expectedResponse, actualResponse)
-			case dto.ErrorResponse:
-				var actualResponse dto.ErrorResponse
-				err := json.Unmarshal(rec.Body.Bytes(), &actualResponse)
+				assert.Equal(t, *tc.successResponse, resp)
+			}
+			if tc.expectedErrMsg != "" {
+				assert.Nil(t, tc.successResponse)
+				var resp dto.ErrorResponse
+				err := json.Unmarshal(rec.Body.Bytes(), &resp)
 				require.NoError(t, err)
-				assert.Equal(t, expectedResponse, actualResponse)
+				assert.Equal(t, tc.expectedErrMsg, resp.Message)
 			}
 
 			// Verify all mock expectations are met
@@ -201,12 +198,12 @@ func TestShortenURL_Redirect(t *testing.T) {
 	const testURL = "https://google.com"
 
 	testCases := []struct {
-		name             string
-		codeParam        string
-		setupMocks       func(ctx context.Context, mockSvc *service_mocks.ShortenURL)
-		expectedStatus   int
-		expectedURL      string
-		expectedResponse any
+		name           string
+		codeParam      string
+		setupMocks     func(ctx context.Context, mockSvc *service_mocks.ShortenURL)
+		expectedStatus int
+		expectedURL    string
+		expectedErrMsg string
 	}{
 		{
 			name:      "success",
@@ -220,11 +217,11 @@ func TestShortenURL_Redirect(t *testing.T) {
 			expectedURL:    testURL,
 		},
 		{
-			name:             "fail: empty code",
-			codeParam:        "",
-			setupMocks:       func(ctx context.Context, mockSvc *service_mocks.ShortenURL) {},
-			expectedStatus:   http.StatusBadRequest,
-			expectedResponse: dto.ErrorResponse{Error: "Invalid Input"},
+			name:           "fail: empty code",
+			codeParam:      "",
+			setupMocks:     func(ctx context.Context, mockSvc *service_mocks.ShortenURL) {},
+			expectedStatus: http.StatusBadRequest,
+			expectedErrMsg: "Invalid Input",
 		},
 		{
 			name:      "fail: URL not found",
@@ -234,8 +231,8 @@ func TestShortenURL_Redirect(t *testing.T) {
 					Return("", service.ErrURLNotFound).
 					Once()
 			},
-			expectedStatus:   http.StatusBadRequest,
-			expectedResponse: dto.ErrorResponse{Error: "URL not found"},
+			expectedStatus: http.StatusBadRequest,
+			expectedErrMsg: "URL not found",
 		},
 		{
 			name:      "fail: internal server error",
@@ -245,8 +242,8 @@ func TestShortenURL_Redirect(t *testing.T) {
 					Return("", errors.New("any")).
 					Once()
 			},
-			expectedStatus:   http.StatusInternalServerError,
-			expectedResponse: dto.ErrorResponse{Error: "Internal Server Error"},
+			expectedStatus: http.StatusInternalServerError,
+			expectedErrMsg: "Internal Server Error",
 		},
 	}
 
@@ -275,14 +272,12 @@ func TestShortenURL_Redirect(t *testing.T) {
 				assert.Equal(t, tc.expectedURL, rec.Header().Get("Location"))
 			}
 
-			if tc.expectedResponse != nil {
-				switch expectedResponse := tc.expectedResponse.(type) {
-				case dto.ErrorResponse:
-					var actualResponse dto.ErrorResponse
-					err := json.Unmarshal(rec.Body.Bytes(), &actualResponse)
-					require.NoError(t, err)
-					assert.Equal(t, expectedResponse, actualResponse)
-				}
+			if tc.expectedErrMsg != "" {
+				var resp dto.ErrorResponse
+				err := json.Unmarshal(rec.Body.Bytes(), &resp)
+				require.NoError(t, err)
+
+				assert.Equal(t, tc.expectedErrMsg, resp.Message)
 			}
 
 			mockSvc.AssertExpectations(t)
