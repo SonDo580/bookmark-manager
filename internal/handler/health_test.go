@@ -22,7 +22,7 @@ func TestHealthCheck(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	successResponse := dto.HealthCheckResponse{
-		Message:     dto.HealthStatusOK,
+		Message:     dto.MsgOK,
 		ServiceName: "bookmark_service",
 		InstanceID:  uuid.New().String(),
 	}
@@ -52,7 +52,7 @@ func TestHealthCheck(t *testing.T) {
 			},
 			expectedStatus: http.StatusInternalServerError,
 			expectedResponse: dto.ErrorResponse{
-				Error: "Internal Server Error",
+				Message: dto.MsgInternalServerError,
 			},
 		},
 	}

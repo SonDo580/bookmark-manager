@@ -130,7 +130,8 @@ const docTemplate = `{
         "dto.ErrorResponse": {
             "type": "object",
             "properties": {
-                "error": {
+                "details": {},
+                "message": {
                     "type": "string"
                 }
             }

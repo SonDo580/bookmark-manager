@@ -31,16 +31,16 @@ func NewHealth(svc service.Health) Health {
 // @Failure      500  {object}  dto.ErrorResponse
 // @Router       /health-check [get]
 func (h *health) HealthCheck(c *gin.Context) {
-	response, err := h.svc.Check(c)
+	resp, err := h.svc.Check(c)
 	if err != nil {
 		log.Println(fmt.Errorf("HealthCheck failed: %w", err).Error())
 
 		c.AbortWithStatusJSON(
 			http.StatusInternalServerError,
-			dto.ErrorResponse{Error: "Internal Server Error"},
+			dto.ErrorResponse{Message: dto.MsgInternalServerError},
 		)
 		return
 	}
 
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, resp)
 }

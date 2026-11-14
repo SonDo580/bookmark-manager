@@ -2,7 +2,8 @@ basePath: /
 definitions:
   dto.ErrorResponse:
     properties:
-      error:
+      details: {}
+      message:
         type: string
     type: object
   dto.HealthCheckResponse:

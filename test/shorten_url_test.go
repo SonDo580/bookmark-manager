@@ -36,8 +36,6 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 	const testURL = "https://facebook.com"
 	const testExpSeconds = 3600
 
-	errMsgInvalidInput := "Invalid Input"
-
 	newJSONRequest := func(method, endpoint string, payload any) *http.Request {
 		var buf bytes.Buffer
 		if payload != nil {
@@ -76,7 +74,7 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 				})
 			},
 			expectedStatus: http.StatusBadRequest,
-			expectedErrMsg: errMsgInvalidInput,
+			expectedErrMsg: dto.MsgInvalidInput,
 		},
 	}
 
@@ -107,7 +105,7 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 				err := json.Unmarshal(rec.Body.Bytes(), &actualResponse)
 				require.NoError(t, err)
 
-				assert.Equal(t, tc.expectedErrMsg, actualResponse.Error)
+				assert.Equal(t, tc.expectedErrMsg, actualResponse.Message)
 			}
 		})
 	}
@@ -144,7 +142,7 @@ func TestShortenURL_Redirect(t *testing.T) {
 			name:           "fail: URL not found",
 			codeParam:      testCode + "x",
 			expectedStatus: http.StatusBadRequest,
-			expectedErrMsg: "URL not found",
+			expectedErrMsg: dto.MsgURLNotFound,
 		},
 	}
 
@@ -173,11 +171,11 @@ func TestShortenURL_Redirect(t *testing.T) {
 			}
 
 			if tc.expectedErrMsg != "" {
-				var response dto.ErrorResponse
-				err := json.Unmarshal(rec.Body.Bytes(), &response)
+				var resp dto.ErrorResponse
+				err := json.Unmarshal(rec.Body.Bytes(), &resp)
 				require.NoError(t, err)
 
-				assert.Equal(t, tc.expectedErrMsg, response.Error)
+				assert.Equal(t, tc.expectedErrMsg, resp.Message)
 			}
 		})
 	}
