@@ -10,6 +10,7 @@ type Config struct {
 	ServiceName string `envconfig:"SERVICE_NAME" default:"bookmark_service"`
 	InstanceID  string `envconfig:"INSTANCE_ID"`
 	Port        int    `envconfig:"PORT" default:"8080"`
+	BasePath    string `envconfig:"BASE_PATH" default:"/"`
 }
 
 func Load() (*Config, error) {
