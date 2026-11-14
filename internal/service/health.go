@@ -29,7 +29,7 @@ func (s *health) Check(ctx context.Context) (dto.HealthCheckResponse, error) {
 	}
 
 	return dto.HealthCheckResponse{
-		Message:     dto.HealthStatusOK,
+		Message:     dto.MsgOK,
 		ServiceName: s.cfg.ServiceName,
 		InstanceID:  s.cfg.InstanceID,
 	}, nil

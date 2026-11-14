@@ -9,15 +9,14 @@ import (
 )
 
 func InputFieldError(err error) dto.ErrorResponse {
-	msg := "Invalid Input"
+	msg := dto.MsgInvalidInput
 	if ok := errors.As(err, &validator.ValidationErrors{}); !ok {
 		return dto.ErrorResponse{Message: msg}
 	}
 
 	var errs []string
 	for _, fieldErr := range err.(validator.ValidationErrors) {
-		msg := fmt.Sprintf("%s is invalid (%s)", fieldErr.Field(), fieldErr.Tag())
-		errs = append(errs, msg)
+		errs = append(errs, fmt.Sprintf("%s is invalid (%s)", fieldErr.Field(), fieldErr.Tag()))
 	}
 
 	return dto.ErrorResponse{Message: msg, Details: errs}

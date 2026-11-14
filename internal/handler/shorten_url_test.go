@@ -62,7 +62,7 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 			input:          "{invalid-json",
 			setupMocks:     func(mockSvc *service_mocks.ShortenURL, ctx context.Context) {},
 			expectedStatus: http.StatusBadRequest,
-			expectedErrMsg: "Invalid Input",
+			expectedErrMsg: dto.MsgInvalidInput,
 		},
 		{
 			name: "fail: wrong input field types",
@@ -72,7 +72,7 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 			},
 			setupMocks:     func(mockSvc *service_mocks.ShortenURL, ctx context.Context) {},
 			expectedStatus: http.StatusBadRequest,
-			expectedErrMsg: "Invalid Input",
+			expectedErrMsg: dto.MsgInvalidInput,
 		},
 		{
 			name: "fail: missing required url",
@@ -81,7 +81,7 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 			},
 			setupMocks:     func(mockSvc *service_mocks.ShortenURL, ctx context.Context) {},
 			expectedStatus: http.StatusBadRequest,
-			expectedErrMsg: "Invalid Input",
+			expectedErrMsg: dto.MsgInvalidInput,
 		},
 		{
 			name: "fail: negative exp_seconds",
@@ -91,7 +91,7 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 			},
 			setupMocks:     func(mockSvc *service_mocks.ShortenURL, ctx context.Context) {},
 			expectedStatus: http.StatusBadRequest,
-			expectedErrMsg: "Invalid Input",
+			expectedErrMsg: dto.MsgInvalidInput,
 		},
 		{
 			name: "fail: exceed exp_seconds limit",
@@ -101,7 +101,7 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 			},
 			setupMocks:     func(mockSvc *service_mocks.ShortenURL, ctx context.Context) {},
 			expectedStatus: http.StatusBadRequest,
-			expectedErrMsg: "Invalid Input",
+			expectedErrMsg: dto.MsgInvalidInput,
 		},
 		{
 			name: "success: omit optional exp_seconds",
@@ -128,7 +128,7 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 					Once()
 			},
 			expectedStatus: http.StatusInternalServerError,
-			expectedErrMsg: "Internal Server Error",
+			expectedErrMsg: dto.MsgInternalServerError,
 		},
 	}
 
@@ -221,7 +221,7 @@ func TestShortenURL_Redirect(t *testing.T) {
 			codeParam:      "",
 			setupMocks:     func(ctx context.Context, mockSvc *service_mocks.ShortenURL) {},
 			expectedStatus: http.StatusBadRequest,
-			expectedErrMsg: "Invalid Input",
+			expectedErrMsg: dto.MsgInvalidInput,
 		},
 		{
 			name:      "fail: URL not found",
@@ -232,7 +232,7 @@ func TestShortenURL_Redirect(t *testing.T) {
 					Once()
 			},
 			expectedStatus: http.StatusBadRequest,
-			expectedErrMsg: "URL not found",
+			expectedErrMsg: dto.MsgURLNotFound,
 		},
 		{
 			name:      "fail: internal server error",
@@ -243,7 +243,7 @@ func TestShortenURL_Redirect(t *testing.T) {
 					Once()
 			},
 			expectedStatus: http.StatusInternalServerError,
-			expectedErrMsg: "Internal Server Error",
+			expectedErrMsg: dto.MsgInternalServerError,
 		},
 	}
 

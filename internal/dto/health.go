@@ -1,7 +1,5 @@
 package dto
 
-const HealthStatusOK = "OK"
-
 type HealthCheckResponse struct {
 	Message     string `json:"message"`
 	ServiceName string `json:"service_name"`

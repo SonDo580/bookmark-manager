@@ -75,7 +75,7 @@ func TestHealthCheck(t *testing.T) {
 			}
 
 			expectedResponse := dto.HealthCheckResponse{
-				Message:     dto.HealthStatusOK,
+				Message:     dto.MsgOK,
 				ServiceName: tc.cfg.ServiceName,
 				InstanceID:  tc.cfg.InstanceID,
 			}

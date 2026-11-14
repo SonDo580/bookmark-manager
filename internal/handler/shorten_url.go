@@ -64,7 +64,7 @@ func (h *shortenURL) CreateShortenedLink(c *gin.Context) {
 
 		c.AbortWithStatusJSON(
 			http.StatusInternalServerError,
-			dto.ErrorResponse{Message: "Internal Server Error"},
+			dto.ErrorResponse{Message: dto.MsgInternalServerError},
 		)
 		return
 	}
@@ -92,7 +92,7 @@ func (h *shortenURL) Redirect(c *gin.Context) {
 	if code == "" {
 		c.AbortWithStatusJSON(
 			http.StatusBadRequest,
-			dto.ErrorResponse{Message: "Invalid Input"},
+			dto.ErrorResponse{Message: dto.MsgInvalidInput},
 		)
 		return
 	}
@@ -102,7 +102,7 @@ func (h *shortenURL) Redirect(c *gin.Context) {
 		if errors.Is(err, service.ErrURLNotFound) {
 			c.AbortWithStatusJSON(
 				http.StatusBadRequest,
-				dto.ErrorResponse{Message: "URL not found"},
+				dto.ErrorResponse{Message: dto.MsgURLNotFound},
 			)
 			return
 		}
@@ -111,7 +111,7 @@ func (h *shortenURL) Redirect(c *gin.Context) {
 
 		c.AbortWithStatusJSON(
 			http.StatusInternalServerError,
-			dto.ErrorResponse{Message: "Internal Server Error"},
+			dto.ErrorResponse{Message: dto.MsgInternalServerError},
 		)
 		return
 	}

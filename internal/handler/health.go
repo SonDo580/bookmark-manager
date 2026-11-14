@@ -37,7 +37,7 @@ func (h *health) HealthCheck(c *gin.Context) {
 
 		c.AbortWithStatusJSON(
 			http.StatusInternalServerError,
-			dto.ErrorResponse{Message: "Internal Server Error"},
+			dto.ErrorResponse{Message: dto.MsgInternalServerError},
 		)
 		return
 	}

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/SonDo580/bookmark-manager/internal/dto"
 	"github.com/go-playground/validator/v10"
 	"github.com/stretchr/testify/assert"
 )
@@ -58,7 +59,7 @@ func TestInputFieldError(t *testing.T) {
 
 			resp := InputFieldError(tc.inputErr)
 
-			expectedMessage := "Invalid Input"
+			expectedMessage := dto.MsgInvalidInput
 			assert.Equal(t, expectedMessage, resp.Message)
 
 			if tc.expectedDetails == nil {
