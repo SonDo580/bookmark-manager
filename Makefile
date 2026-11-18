@@ -46,7 +46,7 @@ ifneq ($(GIT_TAG),)
 	IMG_TAG := $(GIT_TAG)
 endif
 
-docker-build: swagger
+docker-build:
 	docker build -t $(IMG_NAME):$(IMG_TAG) .
 
 DOCKER_USERNAME = ?
