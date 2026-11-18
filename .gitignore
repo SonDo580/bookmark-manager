@@ -3,5 +3,6 @@
 .env
 coverage.*
 **/__debug*
+test_output
 
-todo.md
+todo*.md
