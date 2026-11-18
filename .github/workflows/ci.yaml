@@ -13,7 +13,7 @@ on:
 
 jobs:
   ci_pipeline:
-    runs_on: ubuntu-latest
+    runs-on: ubuntu-latest
     steps:
       - name: checkout
         uses: actions/checkout@v3
