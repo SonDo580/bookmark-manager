@@ -49,8 +49,8 @@ endif
 docker-build:
 	docker build -t $(IMG_NAME):$(IMG_TAG) .
 
-DOCKER_USERNAME = ?
-DOCKER_PASSWORD = ?
+DOCKER_USERNAME ?=
+DOCKER_PASSWORD ?=
 
 docker-login:
 	echo "$(DOCKER_PASSWORD)" | docker login -u "$(DOCKER_USERNAME)" --password-stdin
