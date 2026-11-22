@@ -3,6 +3,8 @@ package main
 import (
 	"github.com/SonDo580/bookmark-manager/internal/api"
 	"github.com/SonDo580/bookmark-manager/internal/config"
+	"github.com/SonDo580/bookmark-manager/internal/model"
+	dbPkg "github.com/SonDo580/bookmark-manager/pkg/db"
 	"github.com/SonDo580/bookmark-manager/pkg/redis"
 )
 
@@ -22,7 +24,16 @@ func main() {
 	}
 	defer redisClient.Close()
 
-	app := api.NewEngine(cfg, redisClient)
+	db, err := dbPkg.NewClient("")
+	if err != nil {
+		panic(err)
+	}
+	err = db.AutoMigrate(&model.User{})
+	if err != nil {
+		panic(err)
+	}
+
+	app := api.NewEngine(cfg, redisClient, db)
 	err = app.Start()
 	if err != nil {
 		panic(err)

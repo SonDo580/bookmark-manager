@@ -13,6 +13,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"gorm.io/gorm"
 
 	_ "github.com/SonDo580/bookmark-manager/docs"
 )
@@ -26,20 +27,28 @@ type engine struct {
 	app         *gin.Engine
 	cfg         *config.Config
 	redisClient *redis.Client
+	db          *gorm.DB
 }
 
-func NewEngine(cfg *config.Config, redisClient *redis.Client) Engine {
-	e := &engine{app: gin.Default(), cfg: cfg, redisClient: redisClient}
+func NewEngine(cfg *config.Config, redisClient *redis.Client, db *gorm.DB) Engine {
+	e := &engine{
+		app:         gin.Default(),
+		cfg:         cfg,
+		redisClient: redisClient,
+		db:          db,
+	}
 	e.initRoutes()
 
 	return e
 }
 
-func (e *engine) Start() error {
-	return e.app.Run(fmt.Sprintf(":%d", e.cfg.Port))
+type handlers struct {
+	healthHandler handler.Health
+	linkHandler   handler.ShortenURL
+	userHandler   handler.UserHandler
 }
 
-func (e *engine) initRoutes() {
+func (e *engine) initHandlers() *handlers {
 	healthSvc := service.NewHealth(e.cfg, e.redisClient)
 	healthHandler := handler.NewHealth(healthSvc)
 
@@ -48,13 +57,39 @@ func (e *engine) initRoutes() {
 	shortenURLSvc := service.NewShortenURL(urlStorageRepo, genCodeSvc)
 	shortenURLHandler := handler.NewShortenURL(shortenURLSvc)
 
+	userRepo := repository.NewUserRepository(e.db)
+	userSvc := service.NewUserService(userRepo)
+	userHandler := handler.NewUserHandler(userSvc)
+
+	return &handlers{
+		healthHandler: healthHandler,
+		linkHandler:   shortenURLHandler,
+		userHandler:   userHandler,
+	}
+}
+
+func (e *engine) initRoutes() {
+	allHandlers := e.initHandlers()
+
 	docs.SwaggerInfo.BasePath = e.cfg.BasePath
 	e.app.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	e.app.GET("/health-check", healthHandler.HealthCheck)
+	e.app.GET("/health-check", allHandlers.healthHandler.HealthCheck)
 
-	e.app.POST("/v1/links/shorten", shortenURLHandler.CreateShortenedLink)
-	e.app.GET("/v1/links/redirect/:code", shortenURLHandler.Redirect)
+	v1Routes := e.app.Group("/v1")
+	{
+		linkRoutes := v1Routes.Group("/links")
+		{
+			linkRoutes.POST("/shorten", allHandlers.linkHandler.CreateShortenedLink)
+			linkRoutes.GET("/redirect/:code", allHandlers.linkHandler.Redirect)
+		}
+
+		v1Routes.POST("/users/register", allHandlers.userHandler.Register)
+	}
+}
+
+func (e *engine) Start() error {
+	return e.app.Run(fmt.Sprintf(":%d", e.cfg.Port))
 }
 
 func (e *engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {

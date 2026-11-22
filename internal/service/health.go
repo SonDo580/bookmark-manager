@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/SonDo580/bookmark-manager/internal/config"
+	"github.com/SonDo580/bookmark-manager/internal/constants"
 	"github.com/SonDo580/bookmark-manager/internal/dto"
 	"github.com/redis/go-redis/v9"
 )
@@ -29,7 +30,7 @@ func (s *health) Check(ctx context.Context) (dto.HealthCheckResponse, error) {
 	}
 
 	return dto.HealthCheckResponse{
-		Message:     dto.MsgOK,
+		Message:     constants.MsgOK,
 		ServiceName: s.cfg.ServiceName,
 		InstanceID:  s.cfg.InstanceID,
 	}, nil

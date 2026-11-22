@@ -10,8 +10,8 @@ import (
 
 	"github.com/SonDo580/bookmark-manager/internal/api"
 	"github.com/SonDo580/bookmark-manager/internal/config"
+	"github.com/SonDo580/bookmark-manager/internal/constants"
 	"github.com/SonDo580/bookmark-manager/internal/dto"
-	"github.com/SonDo580/bookmark-manager/internal/handler"
 	"github.com/SonDo580/bookmark-manager/internal/service"
 	redisPkg "github.com/SonDo580/bookmark-manager/pkg/redis"
 	"github.com/gin-gonic/gin"
@@ -58,7 +58,7 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 		{
 			name: "success",
 			setupTestRequest: func() *http.Request {
-				return newJSONRequest(correctMethod, correctEndpoint, handler.ShortenURLRequest{
+				return newJSONRequest(correctMethod, correctEndpoint, dto.ShortenURLRequest{
 					URL:        testURL,
 					ExpSeconds: testExpSeconds,
 				})
@@ -68,13 +68,13 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 		{
 			name: "fail: invalid request body (negative exp_seconds)",
 			setupTestRequest: func() *http.Request {
-				return newJSONRequest(correctMethod, correctEndpoint, handler.ShortenURLRequest{
+				return newJSONRequest(correctMethod, correctEndpoint, dto.ShortenURLRequest{
 					URL:        testURL,
 					ExpSeconds: -10,
 				})
 			},
 			expectedStatus: http.StatusBadRequest,
-			expectedErrMsg: dto.MsgInvalidInput,
+			expectedErrMsg: constants.MsgInvalidInput,
 		},
 	}
 
@@ -94,7 +94,7 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 
 			switch tc.expectedStatus {
 			case http.StatusCreated:
-				var actualResponse handler.ShortenURLResponse
+				var actualResponse dto.ShortenURLResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &actualResponse)
 				require.NoError(t, err)
 
@@ -142,7 +142,7 @@ func TestShortenURL_Redirect(t *testing.T) {
 			name:           "fail: URL not found",
 			codeParam:      testCode + "x",
 			expectedStatus: http.StatusBadRequest,
-			expectedErrMsg: dto.MsgURLNotFound,
+			expectedErrMsg: constants.MsgURLNotFound,
 		},
 	}
 

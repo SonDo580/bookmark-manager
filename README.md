@@ -57,10 +57,12 @@ type Health interface {
 make test
 ```
 
-## Redis
+## Tools
 
-- Use Redis CLI:
+- Interact with Redis: use Redis CLI.
 
 ```bash
 docker exec -it bookmark-service-redis redis-cli
 ```
+
+- Interact with DB: use DBeaver (or other tools).

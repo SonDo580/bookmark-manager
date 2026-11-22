@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/SonDo580/bookmark-manager/internal/constants"
 	"github.com/SonDo580/bookmark-manager/internal/dto"
 	"github.com/SonDo580/bookmark-manager/internal/service"
 	"github.com/SonDo580/bookmark-manager/pkg/response"
@@ -26,29 +27,19 @@ func NewShortenURL(svc service.ShortenURL) ShortenURL {
 	return &shortenURL{svc: svc}
 }
 
-type ShortenURLRequest struct {
-	URL        string `json:"url" binding:"required,url"`
-	ExpSeconds int    `json:"exp_seconds" binding:"gte=0,lte=86400"`
-}
-
-type ShortenURLResponse struct {
-	Code    string `json:"code"`
-	Message string `json:"message"`
-}
-
 // CreateShortenedLink godoc
 // @Summary      Generate a shortened URL
 // @Description  Generate a shortened URL from the original URL.
 // @Tags         link
 // @Accept       json
 // @Produce      json
-// @Param        request  body      ShortenURLRequest true "Input required"
-// @Success      201      {object}  ShortenURLResponse
+// @Param        request  body      dto.ShortenURLRequest true "Input required"
+// @Success      201      {object}  dto.ShortenURLResponse
 // @Failure      400      {object}  dto.ErrorResponse
 // @Failure      500      {object}  dto.ErrorResponse
 // @Router       /v1/links/shorten [post]
 func (h *shortenURL) CreateShortenedLink(c *gin.Context) {
-	input := &ShortenURLRequest{}
+	input := &dto.ShortenURLRequest{}
 	if err := c.ShouldBindJSON(input); err != nil {
 		c.AbortWithStatusJSON(
 			http.StatusBadRequest,
@@ -64,14 +55,14 @@ func (h *shortenURL) CreateShortenedLink(c *gin.Context) {
 
 		c.AbortWithStatusJSON(
 			http.StatusInternalServerError,
-			dto.ErrorResponse{Message: dto.MsgInternalServerError},
+			dto.ErrorResponse{Message: constants.MsgInternalServerError},
 		)
 		return
 	}
 
 	c.JSON(
 		http.StatusCreated,
-		ShortenURLResponse{
+		dto.ShortenURLResponse{
 			Code:    code,
 			Message: "Shorten URL generated successfully!",
 		},
@@ -92,7 +83,7 @@ func (h *shortenURL) Redirect(c *gin.Context) {
 	if code == "" {
 		c.AbortWithStatusJSON(
 			http.StatusBadRequest,
-			dto.ErrorResponse{Message: dto.MsgInvalidInput},
+			dto.ErrorResponse{Message: constants.MsgInvalidInput},
 		)
 		return
 	}
@@ -102,7 +93,7 @@ func (h *shortenURL) Redirect(c *gin.Context) {
 		if errors.Is(err, service.ErrURLNotFound) {
 			c.AbortWithStatusJSON(
 				http.StatusBadRequest,
-				dto.ErrorResponse{Message: dto.MsgURLNotFound},
+				dto.ErrorResponse{Message: constants.MsgURLNotFound},
 			)
 			return
 		}
@@ -111,7 +102,7 @@ func (h *shortenURL) Redirect(c *gin.Context) {
 
 		c.AbortWithStatusJSON(
 			http.StatusInternalServerError,
-			dto.ErrorResponse{Message: dto.MsgInternalServerError},
+			dto.ErrorResponse{Message: constants.MsgInternalServerError},
 		)
 		return
 	}

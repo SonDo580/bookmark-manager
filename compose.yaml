@@ -1,6 +1,21 @@
 services:
   redis:
     image: redis:alpine
-    container_name: bookmark-service-redis
+    container_name: bookmark-redis
     ports:
       - "6380:6379"
+
+  postgres:
+    image: postgres:18-alpine
+    container_name: bookmark-postgres
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_USER=any
+      - POSTGRES_PASSWORD=any
+      - POSTGRES_DB=bookmark
+    volumes:
+      - bookmark_pgdata:/var/lib/postgresql
+
+volumes:
+  bookmark_pgdata:

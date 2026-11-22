@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/SonDo580/bookmark-manager/internal/constants"
 	"github.com/SonDo580/bookmark-manager/internal/dto"
 	"github.com/SonDo580/bookmark-manager/internal/service"
 	"github.com/gin-gonic/gin"
@@ -37,7 +38,7 @@ func (h *health) HealthCheck(c *gin.Context) {
 
 		c.AbortWithStatusJSON(
 			http.StatusInternalServerError,
-			dto.ErrorResponse{Message: dto.MsgInternalServerError},
+			dto.ErrorResponse{Message: constants.MsgInternalServerError},
 		)
 		return
 	}

@@ -9,6 +9,7 @@ import (
 
 	"github.com/SonDo580/bookmark-manager/internal/api"
 	"github.com/SonDo580/bookmark-manager/internal/config"
+	"github.com/SonDo580/bookmark-manager/internal/constants"
 	"github.com/SonDo580/bookmark-manager/internal/dto"
 	redisPkg "github.com/SonDo580/bookmark-manager/pkg/redis"
 	"github.com/gin-gonic/gin"
@@ -75,7 +76,7 @@ func TestHealthCheck(t *testing.T) {
 			}
 
 			expectedResponse := dto.HealthCheckResponse{
-				Message:     dto.MsgOK,
+				Message:     constants.MsgOK,
 				ServiceName: tc.cfg.ServiceName,
 				InstanceID:  tc.cfg.InstanceID,
 			}
