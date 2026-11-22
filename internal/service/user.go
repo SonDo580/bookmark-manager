@@ -11,8 +11,9 @@ import (
 	"github.com/SonDo580/bookmark-manager/pkg/utils"
 )
 
+//go:generate mockery --name=UserService --filename user.go --outpkg service_mocks
 type UserService interface {
-	Register(ctx context.Context, input *dto.RegisterRequest) (*model.User, error)
+	Register(ctx context.Context, input dto.RegisterRequest) (*model.User, error)
 }
 
 type userService struct {
@@ -28,7 +29,7 @@ var (
 	ErrDuplicateEmail    = errors.New(constants.MsgEmailAlreadyExists)
 )
 
-func (s *userService) Register(ctx context.Context, input *dto.RegisterRequest) (*model.User, error) {
+func (s *userService) Register(ctx context.Context, input dto.RegisterRequest) (*model.User, error) {
 	hashedPassword, err := utils.HashPassword(input.Password)
 	if err != nil {
 		return nil, err

@@ -46,7 +46,7 @@ func (h *userHandler) Register(c *gin.Context) {
 		return
 	}
 
-	user, err := h.svc.Register(c, input)
+	user, err := h.svc.Register(c, *input)
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrDuplicateUsername):
