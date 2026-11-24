@@ -25,10 +25,12 @@ func TestUserHandler_Register(t *testing.T) {
 
 	gin.SetMode(gin.TestMode)
 
-	const testUsername = "shadow"
-	const testEmail = "shadow@x.com"
-	const testDisplayName = "Shadow"
-	const testPassword = "examplePass"
+	const (
+		testUsername    = "shadow"
+		testEmail       = "shadow@x.com"
+		testDisplayName = "Shadow"
+		testPassword    = "examplePass"
+	)
 
 	validReq := dto.RegisterRequest{
 		Username:    testUsername,

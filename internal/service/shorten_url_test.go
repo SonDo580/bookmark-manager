@@ -14,9 +14,11 @@ import (
 func TestShortenURL_CreateShortenedLink(t *testing.T) {
 	t.Parallel()
 
-	const testURL = "https://facebook.com"
-	const testCode = "abc1234"
-	const testExp = 1 * time.Hour
+	const (
+		testURL  = "https://facebook.com"
+		testCode = "abc1234"
+		testExp  = 1 * time.Hour
+	)
 
 	errGenCode := errors.New("fail to generate code")
 	errStore := errors.New("fail to store")
@@ -109,10 +111,12 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 func TestShortenURL_GetURLFromCode(t *testing.T) {
 	t.Parallel()
 
-	const testURL = "https://facebook.com"
-	const testCode = "abc1234"
+	const (
+		testURL  = "https://facebook.com"
+		testCode = "abc1234"
+	)
 
-	errGetURL := errors.New("any")
+	errGetURL := errors.New("fail to get URL")
 
 	testCases := []struct {
 		name        string

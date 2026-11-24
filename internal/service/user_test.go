@@ -18,10 +18,12 @@ import (
 func TestUserService_Register(t *testing.T) {
 	t.Parallel()
 
-	const testUsername = "shadow"
-	const testEmail = "shadow@x.com"
-	const testDisplayName = "Shadow"
-	const testPassword = "examplePass"
+	const (
+		testUsername    = "shadow"
+		testEmail       = "shadow@x.com"
+		testDisplayName = "Shadow"
+		testPassword    = "examplePass"
+	)
 
 	input := dto.RegisterRequest{
 		Username:    testUsername,

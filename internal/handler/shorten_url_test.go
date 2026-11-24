@@ -24,10 +24,12 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 
 	gin.SetMode(gin.TestMode)
 
-	const testURL = "https://facebook.com"
-	const testCode = "abc1234"
-	const testExpSeconds = 3600
-	const testExp = testExpSeconds * time.Second
+	const (
+		testURL        = "https://facebook.com"
+		testCode       = "abc1234"
+		testExpSeconds = 3600
+		testExp        = testExpSeconds * time.Second
+	)
 
 	responseSuccess := func(code string) *dto.ShortenURLResponse {
 		return &dto.ShortenURLResponse{
@@ -195,8 +197,10 @@ func TestShortenURL_Redirect(t *testing.T) {
 
 	gin.SetMode(gin.TestMode)
 
-	const testCode = "abc1234"
-	const testURL = "https://google.com"
+	const (
+		testCode = "abc1234"
+		testURL  = "https://google.com"
+	)
 
 	testCases := []struct {
 		name           string
