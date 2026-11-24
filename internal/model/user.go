@@ -13,8 +13,8 @@ type User struct {
 	Password    string    `gorm:"type:text;not null;column:password" json:"-"`
 	Email       string    `gorm:"type:varchar(255);uniqueIndex:uq_users_email;not null;column:email" json:"email"`
 	DisplayName string    `gorm:"type:varchar(100);not null;column:display_name" json:"display_name"`
-	CreatedAt   time.Time `gorm:"type:timestamptz;column:created_at;not null;autoCreateTime" json:"created_at"`
-	UpdatedAt   time.Time `gorm:"type:timestamptz;column:updated_at;not null;autoUpdateTime" json:"updated_at"`
+	CreatedAt   time.Time `gorm:"column:created_at;not null;autoCreateTime" json:"created_at"`
+	UpdatedAt   time.Time `gorm:"column:updated_at;not null;autoUpdateTime" json:"updated_at"`
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) error {

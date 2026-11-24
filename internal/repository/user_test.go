@@ -11,14 +11,6 @@ import (
 	"gorm.io/gorm"
 )
 
-type partialUser struct {
-	ID          string
-	Username    string
-	Password    string
-	Email       string
-	DisplayName string
-}
-
 func TestUserRepository_CreateUser(t *testing.T) {
 	t.Parallel()
 
@@ -27,9 +19,7 @@ func TestUserRepository_CreateUser(t *testing.T) {
 		testEmail          = "shadow@x.com"
 		testDisplayName    = "Shadow"
 		testHashedPassword = "$2a$10$<hashed-password>"
-	)
 
-	const (
 		otherUsername = "sonic"
 		otherEmail    = "sonic@x.com"
 	)
@@ -80,12 +70,11 @@ func TestUserRepository_CreateUser(t *testing.T) {
 	verifyCreatedUser := func(t *testing.T, ctx context.Context, db *gorm.DB, expected *model.User) {
 		t.Helper()
 
-		var stored partialUser
-		findErr := db.WithContext(ctx).
-			Table("users").
+		var stored model.User
+		err := db.WithContext(ctx).
 			Where("username = ?", expected.Username).
 			First(&stored).Error
-		require.NoError(t, findErr)
+		require.NoError(t, err)
 
 		assert.NotEmpty(t, stored.ID)
 		assert.Equal(t, expected.Username, stored.Username)
