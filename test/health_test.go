@@ -11,6 +11,7 @@ import (
 	"github.com/SonDo580/bookmark-manager/internal/config"
 	"github.com/SonDo580/bookmark-manager/internal/constants"
 	"github.com/SonDo580/bookmark-manager/internal/dto"
+	dbPkg "github.com/SonDo580/bookmark-manager/pkg/db"
 	redisPkg "github.com/SonDo580/bookmark-manager/pkg/redis"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -64,7 +65,9 @@ func TestHealthCheck(t *testing.T) {
 			_, mockRedisClient := redisPkg.InitMockRedis(t)
 			defer mockRedisClient.Close()
 
-			testAPIEngine := api.NewEngine(tc.cfg, mockRedisClient)
+			testDB := dbPkg.CreateTestDB(t)
+
+			testAPIEngine := api.NewEngine(tc.cfg, mockRedisClient, testDB)
 			rec := httptest.NewRecorder()
 			req := tc.setupTestRequest()
 			testAPIEngine.ServeHTTP(rec, req)

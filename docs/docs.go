@@ -99,7 +99,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.ShortenURLRequest"
+                            "$ref": "#/definitions/dto.ShortenURLRequest"
                         }
                     }
                 ],
@@ -107,7 +107,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/handler.ShortenURLResponse"
+                            "$ref": "#/definitions/dto.ShortenURLResponse"
                         }
                     },
                     "400": {
@@ -153,7 +153,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/handler.RegisterResponse"
+                            "$ref": "#/definitions/dto.RegisterResponse"
                         }
                     },
                     "400": {
@@ -224,7 +224,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.RegisterResponse": {
+        "dto.RegisterResponse": {
             "type": "object",
             "properties": {
                 "data": {
@@ -235,7 +235,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.ShortenURLRequest": {
+        "dto.ShortenURLRequest": {
             "type": "object",
             "required": [
                 "url"
@@ -251,7 +251,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.ShortenURLResponse": {
+        "dto.ShortenURLResponse": {
             "type": "object",
             "properties": {
                 "code": {

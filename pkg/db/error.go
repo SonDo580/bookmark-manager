@@ -2,6 +2,7 @@ package db
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/jackc/pgx/v5/pgconn"
 )
@@ -19,29 +20,23 @@ func CatchDBError(filters []ErrorFilter, err error) error {
 	return err
 }
 
-func pgErrorFilter(errCode, constraintName string, targetErr error) ErrorFilter {
+// (The app uses Postgres while the tests use SQLite)
+
+func UniqueViolationFilter(pgConstraint, sqliteTarget string, targetErr error) ErrorFilter {
 	return func(err error) (bool, error) {
 		if err == nil {
 			return false, nil
 		}
 
 		var pgErr *pgconn.PgError
-		if !errors.As(err, &pgErr) {
-			return false, nil
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" && pgErr.ConstraintName == pgConstraint {
+			return true, targetErr
 		}
 
-		if pgErr.Code != errCode {
-			return false, nil
+		if strings.Contains(err.Error(), "UNIQUE constraint failed: "+sqliteTarget) {
+			return true, targetErr
 		}
 
-		if pgErr.ConstraintName != constraintName {
-			return false, nil
-		}
-
-		return true, targetErr
+		return false, nil
 	}
-}
-
-func PGUniqueViolationFilter(constraintName string, targetErr error) ErrorFilter {
-	return pgErrorFilter("23505", constraintName, targetErr)
 }

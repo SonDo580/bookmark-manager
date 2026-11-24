@@ -13,6 +13,7 @@ import (
 	"github.com/SonDo580/bookmark-manager/internal/constants"
 	"github.com/SonDo580/bookmark-manager/internal/dto"
 	"github.com/SonDo580/bookmark-manager/internal/service"
+	dbPkg "github.com/SonDo580/bookmark-manager/pkg/db"
 	redisPkg "github.com/SonDo580/bookmark-manager/pkg/redis"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -85,7 +86,9 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 			_, mockRedisClient := redisPkg.InitMockRedis(t)
 			defer mockRedisClient.Close()
 
-			testAPIEngine := api.NewEngine(cfg, mockRedisClient)
+			testDB := dbPkg.CreateTestDB(t)
+
+			testAPIEngine := api.NewEngine(cfg, mockRedisClient, testDB)
 			rec := httptest.NewRecorder()
 			req := tc.setupTestRequest()
 			testAPIEngine.ServeHTTP(rec, req)
@@ -153,12 +156,14 @@ func TestShortenURL_Redirect(t *testing.T) {
 			_, mockRedisClient := redisPkg.InitMockRedis(t)
 			defer mockRedisClient.Close()
 
+			testDB := dbPkg.CreateTestDB(t)
+
 			// Store code-to-URL mapping
 			ctx := t.Context()
 			err := mockRedisClient.Set(ctx, testCode, testURL, 0).Err()
 			require.NoError(t, err)
 
-			testAPIEngine := api.NewEngine(cfg, mockRedisClient)
+			testAPIEngine := api.NewEngine(cfg, mockRedisClient, testDB)
 			rec := httptest.NewRecorder()
 			endpoint := "/v1/links/redirect/" + tc.codeParam
 			req := httptest.NewRequest(http.MethodGet, endpoint, nil)

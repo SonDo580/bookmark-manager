@@ -32,10 +32,13 @@ func (r *userRepository) CreateUser(ctx context.Context, user *model.User) error
 	err := r.db.WithContext(ctx).Create(user).Error
 
 	if err != nil {
-		return dbPkg.CatchDBError([]dbPkg.ErrorFilter{
-			dbPkg.PGUniqueViolationFilter("idx_users_username", ErrDuplicateUsername),
-			dbPkg.PGUniqueViolationFilter("idx_users_email", ErrDuplicateEmail),
-		}, err)
+		return dbPkg.CatchDBError(
+			[]dbPkg.ErrorFilter{
+				dbPkg.UniqueViolationFilter("uq_users_username", "users.username", ErrDuplicateUsername),
+				dbPkg.UniqueViolationFilter("uq_users_email", "users.email", ErrDuplicateEmail),
+			},
+			err,
+		)
 	}
 
 	return nil
