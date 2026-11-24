@@ -1,15 +1,12 @@
 package test
 
 import (
-	"bytes"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"uuid"
 
 	"github.com/SonDo580/bookmark-manager/internal/api"
-	"github.com/SonDo580/bookmark-manager/internal/config"
 	"github.com/SonDo580/bookmark-manager/internal/constants"
 	"github.com/SonDo580/bookmark-manager/internal/dto"
 	"github.com/SonDo580/bookmark-manager/internal/service"
@@ -25,41 +22,26 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 
 	gin.SetMode(gin.TestMode)
 
-	cfg := &config.Config{
-		ServiceName: "bookmark_service",
-		InstanceID:  uuid.New().String(),
-		Port:        8080,
-	}
+	cfg := getDefaultConfig()
 
-	correctMethod := http.MethodPost
-	correctEndpoint := "/v1/links/shorten"
+	const (
+		correctMethod   = http.MethodPost
+		correctEndpoint = "/v1/links/shorten"
 
-	const testURL = "https://facebook.com"
-	const testExpSeconds = 3600
-
-	newJSONRequest := func(method, endpoint string, payload any) *http.Request {
-		var buf bytes.Buffer
-		if payload != nil {
-			err := json.NewEncoder(&buf).Encode(payload)
-			require.NoError(t, err)
-		}
-
-		req := httptest.NewRequest(method, endpoint, &buf)
-		req.Header.Set("Content-Type", "application/json")
-		return req
-	}
+		testURL        = "https://facebook.com"
+		testExpSeconds = 3600
+	)
 
 	testCases := []struct {
 		name             string
-		cfg              *config.Config
-		setupTestRequest func() *http.Request
+		setupTestRequest func(t *testing.T) *http.Request
 		expectedStatus   int
 		expectedErrMsg   string
 	}{
 		{
 			name: "success",
-			setupTestRequest: func() *http.Request {
-				return newJSONRequest(correctMethod, correctEndpoint, dto.ShortenURLRequest{
+			setupTestRequest: func(t *testing.T) *http.Request {
+				return newJSONRequest(t, correctMethod, correctEndpoint, dto.ShortenURLRequest{
 					URL:        testURL,
 					ExpSeconds: testExpSeconds,
 				})
@@ -68,8 +50,8 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 		},
 		{
 			name: "fail: invalid request body (negative exp_seconds)",
-			setupTestRequest: func() *http.Request {
-				return newJSONRequest(correctMethod, correctEndpoint, dto.ShortenURLRequest{
+			setupTestRequest: func(t *testing.T) *http.Request {
+				return newJSONRequest(t, correctMethod, correctEndpoint, dto.ShortenURLRequest{
 					URL:        testURL,
 					ExpSeconds: -10,
 				})
@@ -90,25 +72,25 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 
 			testAPIEngine := api.NewEngine(cfg, mockRedisClient, testDB)
 			rec := httptest.NewRecorder()
-			req := tc.setupTestRequest()
+			req := tc.setupTestRequest(t)
 			testAPIEngine.ServeHTTP(rec, req)
 
 			assert.Equal(t, tc.expectedStatus, rec.Code)
 
 			switch tc.expectedStatus {
 			case http.StatusCreated:
-				var actualResponse dto.ShortenURLResponse
-				err := json.Unmarshal(rec.Body.Bytes(), &actualResponse)
+				var resp dto.ShortenURLResponse
+				err := json.Unmarshal(rec.Body.Bytes(), &resp)
 				require.NoError(t, err)
 
-				assert.NotEmpty(t, actualResponse.Code)
-				assert.Equal(t, service.DefaultCodeLength, len(actualResponse.Code))
+				assert.NotEmpty(t, resp.Code)
+				assert.Equal(t, service.DefaultCodeLength, len(resp.Code))
 			case http.StatusBadRequest:
-				var actualResponse dto.ErrorResponse
-				err := json.Unmarshal(rec.Body.Bytes(), &actualResponse)
+				var resp dto.ErrorResponse
+				err := json.Unmarshal(rec.Body.Bytes(), &resp)
 				require.NoError(t, err)
 
-				assert.Equal(t, tc.expectedErrMsg, actualResponse.Message)
+				assert.Equal(t, tc.expectedErrMsg, resp.Message)
 			}
 		})
 	}
@@ -119,14 +101,12 @@ func TestShortenURL_Redirect(t *testing.T) {
 
 	gin.SetMode(gin.TestMode)
 
-	cfg := &config.Config{
-		ServiceName: "bookmark_service",
-		InstanceID:  uuid.New().String(),
-		Port:        8080,
-	}
+	cfg := getDefaultConfig()
 
-	const testCode = "abc1234"
-	const testURL = "https://google.com"
+	const (
+		testCode = "abc1234"
+		testURL  = "https://google.com"
+	)
 
 	testCases := []struct {
 		name           string

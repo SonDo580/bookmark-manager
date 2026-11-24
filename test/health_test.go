@@ -5,10 +5,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"uuid"
 
 	"github.com/SonDo580/bookmark-manager/internal/api"
-	"github.com/SonDo580/bookmark-manager/internal/config"
 	"github.com/SonDo580/bookmark-manager/internal/constants"
 	"github.com/SonDo580/bookmark-manager/internal/dto"
 	dbPkg "github.com/SonDo580/bookmark-manager/pkg/db"
@@ -23,35 +21,31 @@ func TestHealthCheck(t *testing.T) {
 
 	gin.SetMode(gin.TestMode)
 
+	cfg := getDefaultConfig()
+
+	const (
+		correctMethod   = http.MethodGet
+		correctEndpoint = "/health-check"
+	)
+
 	testCases := []struct {
 		name               string
-		cfg                *config.Config
 		setupTestRequest   func() *http.Request
 		expectedStatus     int
 		shouldValidateBody bool
 	}{
 		{
 			name: "success",
-			cfg: &config.Config{
-				ServiceName: "bookmark_service",
-				InstanceID:  uuid.New().String(),
-				Port:        8080,
-			},
 			setupTestRequest: func() *http.Request {
-				return httptest.NewRequest("GET", "/health-check", nil)
+				return httptest.NewRequest(correctMethod, correctEndpoint, nil)
 			},
 			expectedStatus:     http.StatusOK,
 			shouldValidateBody: true,
 		},
 		{
 			name: "wrong endpoint",
-			cfg: &config.Config{
-				ServiceName: "bookmark_service",
-				InstanceID:  uuid.New().String(),
-				Port:        8080,
-			},
 			setupTestRequest: func() *http.Request {
-				return httptest.NewRequest("GET", "/health-check-123", nil)
+				return httptest.NewRequest(correctMethod, correctEndpoint+"x", nil)
 			},
 			expectedStatus:     http.StatusNotFound,
 			shouldValidateBody: false,
@@ -67,7 +61,7 @@ func TestHealthCheck(t *testing.T) {
 
 			testDB := dbPkg.CreateTestDB(t)
 
-			testAPIEngine := api.NewEngine(tc.cfg, mockRedisClient, testDB)
+			testAPIEngine := api.NewEngine(cfg, mockRedisClient, testDB)
 			rec := httptest.NewRecorder()
 			req := tc.setupTestRequest()
 			testAPIEngine.ServeHTTP(rec, req)
@@ -78,17 +72,17 @@ func TestHealthCheck(t *testing.T) {
 				return
 			}
 
-			expectedResponse := dto.HealthCheckResponse{
+			expectedResp := dto.HealthCheckResponse{
 				Message:     constants.MsgOK,
-				ServiceName: tc.cfg.ServiceName,
-				InstanceID:  tc.cfg.InstanceID,
+				ServiceName: cfg.ServiceName,
+				InstanceID:  cfg.InstanceID,
 			}
 
-			var actualResponse dto.HealthCheckResponse
-			err := json.Unmarshal(rec.Body.Bytes(), &actualResponse)
+			var actualResp dto.HealthCheckResponse
+			err := json.Unmarshal(rec.Body.Bytes(), &actualResp)
 			require.NoError(t, err)
 
-			assert.Equal(t, expectedResponse, actualResponse)
+			assert.Equal(t, expectedResp, actualResp)
 		})
 	}
 }
