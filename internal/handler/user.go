@@ -34,6 +34,7 @@ func NewUserHandler(svc service.UserService) UserHandler {
 // @Param        request  body      dto.RegisterRequest  true  "Input required"
 // @Success      201      {object}  dto.RegisterResponse
 // @Failure      400      {object}  dto.ErrorResponse
+// @Failure      409      {object}  dto.ErrorResponse
 // @Failure      500      {object}  dto.ErrorResponse
 // @Router       /v1/users/register [post]
 func (h *userHandler) Register(c *gin.Context) {
