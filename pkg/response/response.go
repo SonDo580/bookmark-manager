@@ -4,12 +4,13 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/SonDo580/bookmark-manager/internal/constants"
 	"github.com/SonDo580/bookmark-manager/internal/dto"
 	"github.com/go-playground/validator/v10"
 )
 
 func InputFieldError(err error) dto.ErrorResponse {
-	msg := dto.MsgInvalidInput
+	msg := constants.MsgInvalidInput
 	if ok := errors.As(err, &validator.ValidationErrors{}); !ok {
 		return dto.ErrorResponse{Message: msg}
 	}

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/SonDo580/bookmark-manager/internal/dto"
+	"github.com/SonDo580/bookmark-manager/internal/constants"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -27,7 +27,7 @@ func (r *urlStorage) StoreURL(ctx context.Context, key string, url string, exp t
 	return r.c.SetNX(ctx, key, url, exp).Result()
 }
 
-var ErrURLNotFound = errors.New(dto.MsgURLNotFound)
+var ErrURLNotFound = errors.New(constants.MsgURLNotFound)
 
 func (r *urlStorage) GetURL(ctx context.Context, key string) (string, error) {
 	url, err := r.c.Get(ctx, key).Result()

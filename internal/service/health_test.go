@@ -5,6 +5,7 @@ import (
 	"uuid"
 
 	"github.com/SonDo580/bookmark-manager/internal/config"
+	"github.com/SonDo580/bookmark-manager/internal/constants"
 	"github.com/SonDo580/bookmark-manager/internal/dto"
 	redisPkg "github.com/SonDo580/bookmark-manager/pkg/redis"
 	"github.com/alicebob/miniredis/v2"
@@ -60,7 +61,7 @@ func TestHealthCheck(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				expectedResponse := dto.HealthCheckResponse{
-					Message:     dto.MsgOK,
+					Message:     constants.MsgOK,
 					ServiceName: tc.cfg.ServiceName,
 					InstanceID:  tc.cfg.InstanceID,
 				}

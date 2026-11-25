@@ -9,6 +9,7 @@ import (
 	"testing"
 	"uuid"
 
+	"github.com/SonDo580/bookmark-manager/internal/constants"
 	"github.com/SonDo580/bookmark-manager/internal/dto"
 	service_mocks "github.com/SonDo580/bookmark-manager/internal/service/mocks"
 	"github.com/gin-gonic/gin"
@@ -22,7 +23,7 @@ func TestHealthCheck(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	successResponse := dto.HealthCheckResponse{
-		Message:     dto.MsgOK,
+		Message:     constants.MsgOK,
 		ServiceName: "bookmark_service",
 		InstanceID:  uuid.New().String(),
 	}
@@ -52,7 +53,7 @@ func TestHealthCheck(t *testing.T) {
 			},
 			expectedStatus: http.StatusInternalServerError,
 			expectedResponse: dto.ErrorResponse{
-				Message: dto.MsgInternalServerError,
+				Message: constants.MsgInternalServerError,
 			},
 		},
 	}

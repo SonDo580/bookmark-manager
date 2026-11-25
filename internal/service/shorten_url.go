@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/SonDo580/bookmark-manager/internal/dto"
+	"github.com/SonDo580/bookmark-manager/internal/constants"
 	"github.com/SonDo580/bookmark-manager/internal/repository"
 )
 
@@ -48,7 +48,7 @@ func (s *shortenURL) CreateShortenedLink(ctx context.Context, url string, exp ti
 	return "", ErrMaxRetriesExceeded
 }
 
-var ErrURLNotFound = errors.New(dto.MsgURLNotFound)
+var ErrURLNotFound = errors.New(constants.MsgURLNotFound)
 
 func (s *shortenURL) GetURLFromCode(ctx context.Context, code string) (string, error) {
 	url, err := s.r.GetURL(ctx, code)
