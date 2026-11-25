@@ -11,6 +11,7 @@ type Config struct {
 	InstanceID  string `envconfig:"INSTANCE_ID"`
 	Port        int    `envconfig:"PORT" default:"8080"`
 	BasePath    string `envconfig:"BASE_PATH" default:"/"`
+	LogLevel    string `envconfig:"LOG_LEVEL" default:"INFO"`
 }
 
 func Load() (*Config, error) {

@@ -2,8 +2,6 @@ package handler
 
 import (
 	"errors"
-	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -12,6 +10,7 @@ import (
 	"github.com/SonDo580/bookmark-manager/internal/service"
 	"github.com/SonDo580/bookmark-manager/pkg/response"
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 )
 
 type ShortenURL interface {
@@ -51,7 +50,7 @@ func (h *shortenURL) CreateShortenedLink(c *gin.Context) {
 	exp := time.Duration(input.ExpSeconds) * time.Second
 	code, err := h.svc.CreateShortenedLink(c, input.URL, exp)
 	if err != nil {
-		log.Println(fmt.Errorf("CreateShortenedLink failed: %w", err).Error())
+		log.Error().Err(err).Msg("CreateShortenedLink failed")
 
 		c.AbortWithStatusJSON(
 			http.StatusInternalServerError,
@@ -98,7 +97,7 @@ func (h *shortenURL) Redirect(c *gin.Context) {
 			return
 		}
 
-		log.Println(fmt.Errorf("Redirect failed: %w", err).Error())
+		log.Error().Err(err).Msg("Redirect failed")
 
 		c.AbortWithStatusJSON(
 			http.StatusInternalServerError,

@@ -2,8 +2,6 @@ package handler
 
 import (
 	"errors"
-	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/SonDo580/bookmark-manager/internal/constants"
@@ -11,6 +9,7 @@ import (
 	"github.com/SonDo580/bookmark-manager/internal/service"
 	"github.com/SonDo580/bookmark-manager/pkg/response"
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 )
 
 type UserHandler interface {
@@ -61,7 +60,8 @@ func (h *userHandler) Register(c *gin.Context) {
 				dto.ErrorResponse{Message: constants.MsgEmailAlreadyExists},
 			)
 		default:
-			log.Println(fmt.Errorf("Register failed: %w", err).Error())
+			log.Error().Err(err).Msg("Register failed")
+
 			c.AbortWithStatusJSON(
 				http.StatusInternalServerError,
 				dto.ErrorResponse{Message: constants.MsgInternalServerError},

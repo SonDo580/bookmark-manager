@@ -1,14 +1,13 @@
 package handler
 
 import (
-	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/SonDo580/bookmark-manager/internal/constants"
 	"github.com/SonDo580/bookmark-manager/internal/dto"
 	"github.com/SonDo580/bookmark-manager/internal/service"
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 )
 
 type Health interface {
@@ -34,7 +33,7 @@ func NewHealth(svc service.Health) Health {
 func (h *health) HealthCheck(c *gin.Context) {
 	resp, err := h.svc.Check(c)
 	if err != nil {
-		log.Println(fmt.Errorf("HealthCheck failed: %w", err).Error())
+		log.Error().Err(err).Msg("HealthCheck failed")
 
 		c.AbortWithStatusJSON(
 			http.StatusInternalServerError,

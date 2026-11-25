@@ -5,6 +5,7 @@ import (
 	"github.com/SonDo580/bookmark-manager/internal/config"
 	"github.com/SonDo580/bookmark-manager/internal/model"
 	dbPkg "github.com/SonDo580/bookmark-manager/pkg/db"
+	"github.com/SonDo580/bookmark-manager/pkg/logger"
 	"github.com/SonDo580/bookmark-manager/pkg/redis"
 )
 
@@ -17,6 +18,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	logger.SetLogLevel(cfg.LogLevel)
 
 	redisClient, err := redis.NewClient("")
 	if err != nil {
