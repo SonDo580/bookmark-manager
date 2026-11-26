@@ -13,4 +13,6 @@ const (
 	MsgCannotExtractToken    = "cannot extract token"
 	MsgUserNotFound          = "user not found"
 	MsgWrongCredentials      = "wrong username or password"
+	MsgLackAuthHeader        = "Authorization header required"
+	MsgWrongAuthHeaderFormat = "Authorization header format must be Bearer"
 )

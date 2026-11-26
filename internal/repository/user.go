@@ -14,6 +14,7 @@ import (
 type UserRepository interface {
 	CreateUser(ctx context.Context, user *model.User) error
 	GetUserByUsername(ctx context.Context, username string) (*model.User, error)
+	GetUserByID(ctx context.Context, id string) (*model.User, error)
 }
 
 type userRepository struct {
@@ -50,6 +51,22 @@ func (r *userRepository) GetUserByUsername(ctx context.Context, username string)
 	user := &model.User{}
 
 	err := r.db.WithContext(ctx).Where("username = ?", username).First(user).Error
+	if err != nil {
+		return nil, dbPkg.CatchDBError(
+			[]dbPkg.ErrorFilter{
+				dbPkg.NoRecordFilter(ErrUserNotFound),
+			},
+			err,
+		)
+	}
+
+	return user, nil
+}
+
+func (r *userRepository) GetUserByID(ctx context.Context, id string) (*model.User, error) {
+	user := &model.User{}
+
+	err := r.db.WithContext(ctx).Where("id = ?", id).First(user).Error
 	if err != nil {
 		return nil, dbPkg.CatchDBError(
 			[]dbPkg.ErrorFilter{

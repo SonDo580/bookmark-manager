@@ -2,7 +2,6 @@ package dto
 
 import (
 	"github.com/SonDo580/bookmark-manager/internal/model"
-	"github.com/golang-jwt/jwt/v5"
 )
 
 type RegisterRequest struct {
@@ -27,6 +26,6 @@ type LoginResponse struct {
 	Data    string `json:"data"`
 }
 
-type TokenPayload struct {
-	jwt.RegisteredClaims
+type GetSelfInfoResponse struct {
+	Data *model.User `json:"data"`
 }

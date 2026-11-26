@@ -19,6 +19,7 @@ import (
 type UserService interface {
 	Register(ctx context.Context, input dto.RegisterRequest) (*model.User, error)
 	Login(ctx context.Context, username, password string) (string, error)
+	GetSelfInfoByID(ctx context.Context, id string) (*model.User, error)
 }
 
 type userService struct {
@@ -102,4 +103,8 @@ func (s *userService) Login(ctx context.Context, username, password string) (str
 		"iat": now.Unix(),
 		"exp": now.Add(s.cfg.TokenExp).Unix(),
 	})
+}
+
+func (s *userService) GetSelfInfoByID(ctx context.Context, id string) (*model.User, error) {
+	return s.repo.GetUserByID(ctx, id)
 }

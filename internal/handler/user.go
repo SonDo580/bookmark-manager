@@ -7,6 +7,7 @@ import (
 	"github.com/SonDo580/bookmark-manager/internal/constants"
 	"github.com/SonDo580/bookmark-manager/internal/dto"
 	"github.com/SonDo580/bookmark-manager/internal/service"
+	"github.com/SonDo580/bookmark-manager/pkg/request"
 	"github.com/SonDo580/bookmark-manager/pkg/response"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
@@ -15,6 +16,7 @@ import (
 type UserHandler interface {
 	Register(c *gin.Context)
 	Login(c *gin.Context)
+	GetSelfInfo(c *gin.Context)
 }
 
 type userHandler struct {
@@ -81,7 +83,7 @@ func (h *userHandler) Register(c *gin.Context) {
 	)
 }
 
-// Register godoc
+// Login godoc
 // @Summary      Login
 // @Description  Return token if credential is correct.
 // @Tags         user
@@ -127,5 +129,43 @@ func (h *userHandler) Login(c *gin.Context) {
 			Message: "Logged in successfully!",
 			Data:    tokenStr,
 		},
+	)
+}
+
+// GetSelfInfo godoc
+// @Summary      Get your information
+// @Description  Get your information.
+// @Tags         user
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Success      200      {object}  dto.GetSelfInfoResponse
+// @Failure      401      {object}  dto.ErrorResponse
+// @Failure      500      {object}  dto.ErrorResponse
+// @Router       /v1/self/info [get]
+func (h *userHandler) GetSelfInfo(c *gin.Context) {
+	userID, err := request.ExtractUserID(c)
+	if err != nil {
+		c.AbortWithStatusJSON(
+			http.StatusUnauthorized,
+			dto.ErrorResponse{Message: constants.MsgInvalidToken},
+		)
+		return
+	}
+
+	user, err := h.svc.GetSelfInfoByID(c, userID)
+	if err != nil {
+		log.Error().Err(err).Msgf("GetSelfInfo failed for %s", userID)
+
+		c.AbortWithStatusJSON(
+			http.StatusInternalServerError,
+			dto.ErrorResponse{Message: constants.MsgInternalServerError},
+		)
+		return
+	}
+
+	c.JSON(
+		http.StatusOK,
+		dto.GetSelfInfoResponse{Data: user},
 	)
 }

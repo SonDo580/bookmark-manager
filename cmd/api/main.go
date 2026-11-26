@@ -14,6 +14,9 @@ import (
 // @version         1.0.0
 // @description		API for managing bookmark
 // @BasePath  		/
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 func main() {
 	cfg, err := config.Load()
 	if err != nil {

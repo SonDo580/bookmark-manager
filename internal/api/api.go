@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/SonDo580/bookmark-manager/docs"
+	"github.com/SonDo580/bookmark-manager/internal/api/middleware"
 	"github.com/SonDo580/bookmark-manager/internal/config"
 	"github.com/SonDo580/bookmark-manager/internal/handler"
 	"github.com/SonDo580/bookmark-manager/internal/repository"
@@ -83,6 +84,8 @@ func (e *engine) initHandlers() *handlers {
 func (e *engine) initRoutes() {
 	allHandlers := e.initHandlers()
 
+	jwtMiddleware := middleware.NewJWTMiddleware(e.jwtValidator)
+
 	docs.SwaggerInfo.BasePath = e.cfg.BasePath
 	e.app.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
@@ -100,6 +103,14 @@ func (e *engine) initRoutes() {
 		{
 			userRoutes.POST("/register", allHandlers.userHandler.Register)
 			userRoutes.POST("/login", allHandlers.userHandler.Login)
+		}
+	}
+
+	privateV1Routes := e.app.Group("/v1", jwtMiddleware.Auth())
+	{
+		selfRoutes := privateV1Routes.Group("/self")
+		{
+			selfRoutes.GET("/info", allHandlers.userHandler.GetSelfInfo)
 		}
 	}
 }

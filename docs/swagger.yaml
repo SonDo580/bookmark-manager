@@ -6,6 +6,11 @@ definitions:
       message:
         type: string
     type: object
+  dto.GetSelfInfoResponse:
+    properties:
+      data:
+        $ref: '#/definitions/model.User'
+    type: object
   dto.HealthCheckResponse:
     properties:
       instance_id:
@@ -172,6 +177,31 @@ paths:
       summary: Generate a shortened URL
       tags:
       - link
+  /v1/self/info:
+    get:
+      consumes:
+      - application/json
+      description: Get your information.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.GetSelfInfoResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get your information
+      tags:
+      - user
   /v1/users/login:
     post:
       consumes:
@@ -236,4 +266,9 @@ paths:
       summary: Register a new user
       tags:
       - user
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
