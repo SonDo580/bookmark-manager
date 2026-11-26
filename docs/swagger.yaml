@@ -15,6 +15,24 @@ definitions:
       service_name:
         type: string
     type: object
+  dto.LoginRequest:
+    properties:
+      password:
+        minLength: 8
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  dto.LoginResponse:
+    properties:
+      data:
+        type: string
+      message:
+        type: string
+    type: object
   dto.RegisterRequest:
     properties:
       display_name:
@@ -154,6 +172,36 @@ paths:
       summary: Generate a shortened URL
       tags:
       - link
+  /v1/users/login:
+    post:
+      consumes:
+      - application/json
+      description: Return token if credential is correct.
+      parameters:
+      - description: Input required
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Login
+      tags:
+      - user
   /v1/users/register:
     post:
       consumes:
@@ -175,6 +223,10 @@ paths:
             $ref: '#/definitions/dto.RegisterResponse'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "409":
+          description: Conflict
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
         "500":

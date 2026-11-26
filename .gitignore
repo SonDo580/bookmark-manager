@@ -5,4 +5,6 @@ coverage.*
 **/__debug*
 test_output
 
+**/*.pem
+
 todo*.md

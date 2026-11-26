@@ -1,6 +1,7 @@
 package config
 
 import (
+	"time"
 	"uuid"
 
 	"github.com/kelseyhightower/envconfig"
@@ -12,6 +13,10 @@ type Config struct {
 	Port        int    `envconfig:"PORT" default:"8080"`
 	BasePath    string `envconfig:"BASE_PATH" default:"/"`
 	LogLevel    string `envconfig:"LOG_LEVEL" default:"INFO"`
+
+	PrivateKeyPath string        `envconfig:"PRIVATE_KEY_PATH" default:"./private.pem"`
+	PublicKeyPath  string        `envconfig:"PUBLIC_KEY_PATH" default:"./public.pem"`
+	TokenExp       time.Duration `envconfig:"TOKEN_EXP" default:"24h"`
 }
 
 func Load() (*Config, error) {

@@ -14,6 +14,7 @@ import (
 
 type UserHandler interface {
 	Register(c *gin.Context)
+	Login(c *gin.Context)
 }
 
 type userHandler struct {
@@ -76,6 +77,55 @@ func (h *userHandler) Register(c *gin.Context) {
 		dto.RegisterResponse{
 			Message: "Register user successfully!",
 			Data:    user,
+		},
+	)
+}
+
+// Register godoc
+// @Summary      Login
+// @Description  Return token if credential is correct.
+// @Tags         user
+// @Accept       json
+// @Produce      json
+// @Param        request  body      dto.LoginRequest  true  "Input required"
+// @Success      200      {object}  dto.LoginResponse
+// @Failure      400      {object}  dto.ErrorResponse
+// @Failure      500      {object}  dto.ErrorResponse
+// @Router       /v1/users/login [post]
+func (h *userHandler) Login(c *gin.Context) {
+	input := &dto.LoginRequest{}
+	if err := c.ShouldBindJSON(input); err != nil {
+		c.AbortWithStatusJSON(
+			http.StatusBadRequest,
+			response.InputFieldError(err),
+		)
+		return
+	}
+
+	tokenStr, err := h.svc.Login(c, input.Username, input.Password)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrWrongCredentials):
+			c.AbortWithStatusJSON(
+				http.StatusBadRequest,
+				dto.ErrorResponse{Message: constants.MsgWrongCredentials},
+			)
+		default:
+			log.Error().Err(err).Msg("Login failed")
+
+			c.AbortWithStatusJSON(
+				http.StatusInternalServerError,
+				dto.ErrorResponse{Message: constants.MsgInternalServerError},
+			)
+		}
+		return
+	}
+
+	c.JSON(
+		http.StatusOK,
+		dto.LoginResponse{
+			Message: "Logged in successfully!",
+			Data:    tokenStr,
 		},
 	)
 }
