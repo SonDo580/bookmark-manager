@@ -27,6 +27,8 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/model.User'
+      message:
+        type: string
     type: object
   dto.HealthCheckResponse:
     properties:

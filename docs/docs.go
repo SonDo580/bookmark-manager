@@ -365,6 +365,9 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/model.User"
+                },
+                "message": {
+                    "type": "string"
                 }
             }
         },

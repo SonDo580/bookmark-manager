@@ -11,30 +11,20 @@ type RegisterRequest struct {
 	Email       string `json:"email" binding:"required,email,max=255"`
 }
 
-type RegisterResponse struct {
-	Message string      `json:"message"`
-	Data    *model.User `json:"data"`
-}
+type RegisterResponse = DataResponse[*model.User]
 
 type LoginRequest struct {
 	Username string `json:"username" binding:"required"`
 	Password string `json:"password" binding:"required,min=8"`
 }
 
-type LoginResponse struct {
-	Message string `json:"message"`
-	Data    string `json:"data"`
-}
+type LoginResponse = DataResponse[string]
 
-type GetSelfInfoResponse struct {
-	Data *model.User `json:"data"`
-}
+type GetSelfInfoResponse = DataResponse[*model.User]
 
 type EditSelfInfoRequest struct {
 	DisplayName string `json:"display_name" binding:"required,max=100"`
 	Email       string `json:"email" binding:"required,email,max=255"`
 }
 
-type EditSelfInfoResponse struct {
-	Message string `json:"message"`
-}
+type EditSelfInfoResponse = MessageResponse
