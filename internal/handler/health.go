@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 
+	"github.com/SonDo580/bookmark-manager/internal/config"
 	"github.com/SonDo580/bookmark-manager/internal/constants"
 	"github.com/SonDo580/bookmark-manager/internal/dto"
 	"github.com/SonDo580/bookmark-manager/internal/service"
@@ -15,11 +16,12 @@ type Health interface {
 }
 
 type health struct {
+	cfg *config.Config
 	svc service.Health
 }
 
-func NewHealth(svc service.Health) Health {
-	return &health{svc: svc}
+func NewHealth(cfg *config.Config, svc service.Health) Health {
+	return &health{cfg: cfg, svc: svc}
 }
 
 // HealthCheck godoc
@@ -31,7 +33,7 @@ func NewHealth(svc service.Health) Health {
 // @Failure      500  {object}  dto.ErrorResponse
 // @Router       /health-check [get]
 func (h *health) HealthCheck(c *gin.Context) {
-	resp, err := h.svc.Check(c)
+	err := h.svc.Check(c)
 	if err != nil {
 		log.Error().Err(err).Msg("HealthCheck failed")
 
@@ -42,5 +44,12 @@ func (h *health) HealthCheck(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, resp)
+	c.JSON(
+		http.StatusOK,
+		dto.HealthCheckResponse{
+			Message:     constants.MsgOK,
+			ServiceName: h.cfg.ServiceName,
+			InstanceID:  h.cfg.InstanceID,
+		},
+	)
 }

@@ -13,6 +13,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/SonDo580/bookmark-manager/internal/api"
+	"github.com/SonDo580/bookmark-manager/internal/config"
 	"github.com/SonDo580/bookmark-manager/internal/constants"
 	"github.com/SonDo580/bookmark-manager/internal/dto"
 	"github.com/SonDo580/bookmark-manager/internal/model"
@@ -26,7 +27,7 @@ func TestUser_Register(t *testing.T) {
 
 	gin.SetMode(gin.TestMode)
 
-	cfg := getEmptyConfig()
+	cfg := &config.Config{}
 
 	const (
 		correctMethod   = http.MethodPost

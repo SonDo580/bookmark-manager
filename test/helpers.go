@@ -7,13 +7,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/SonDo580/bookmark-manager/internal/config"
 	"github.com/stretchr/testify/require"
 )
-
-func getEmptyConfig() *config.Config {
-	return &config.Config{}
-}
 
 func newJSONRequest(t *testing.T, method string, target string, payload any) *http.Request {
 	t.Helper()

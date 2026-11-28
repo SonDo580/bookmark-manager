@@ -9,6 +9,7 @@ import (
 	"testing"
 	"uuid"
 
+	"github.com/SonDo580/bookmark-manager/internal/config"
 	"github.com/SonDo580/bookmark-manager/internal/constants"
 	"github.com/SonDo580/bookmark-manager/internal/dto"
 	service_mocks "github.com/SonDo580/bookmark-manager/internal/service/mocks"
@@ -22,39 +23,40 @@ func TestHealthCheck(t *testing.T) {
 
 	gin.SetMode(gin.TestMode)
 
-	successResponse := dto.HealthCheckResponse{
-		Message:     constants.MsgOK,
+	cfg := &config.Config{
 		ServiceName: "bookmark_service",
 		InstanceID:  uuid.New().String(),
+		Port:        8080,
+	}
+
+	successResp := dto.HealthCheckResponse{
+		Message:     constants.MsgOK,
+		ServiceName: cfg.ServiceName,
+		InstanceID:  cfg.InstanceID,
 	}
 
 	testCases := []struct {
-		name             string
-		setupMocks       func(mockSvc *service_mocks.Health, ctx context.Context)
-		expectedStatus   int
-		expectedResponse any
+		name           string
+		setupMocks     func(mockSvc *service_mocks.Health, ctx context.Context)
+		expectedStatus int
+		expectedErrMsg string
 	}{
 		{
 			name: "success",
 			setupMocks: func(mockSvc *service_mocks.Health, ctx context.Context) {
-				mockSvc.On("Check", ctx).
-					Return(successResponse, nil).
-					Once()
+				mockSvc.On("Check", ctx).Return(nil).Once()
 			},
-			expectedStatus:   http.StatusOK,
-			expectedResponse: successResponse,
+			expectedStatus: http.StatusOK,
 		},
 		{
 			name: "fail: redis down",
 			setupMocks: func(mockSvc *service_mocks.Health, ctx context.Context) {
 				mockSvc.On("Check", ctx).
-					Return(dto.HealthCheckResponse{}, errors.New("redis down")).
+					Return(errors.New("redis down")).
 					Once()
 			},
 			expectedStatus: http.StatusInternalServerError,
-			expectedResponse: dto.ErrorResponse{
-				Message: constants.MsgInternalServerError,
-			},
+			expectedErrMsg: constants.MsgInternalServerError,
 		},
 	}
 
@@ -72,7 +74,7 @@ func TestHealthCheck(t *testing.T) {
 			mockHealthSvc := service_mocks.NewHealth(t)
 			tc.setupMocks(mockHealthSvc, ginCtx)
 
-			healthHandler := NewHealth(mockHealthSvc)
+			healthHandler := NewHealth(cfg, mockHealthSvc)
 
 			// Execute handler
 			healthHandler.HealthCheck(ginCtx)
@@ -81,17 +83,16 @@ func TestHealthCheck(t *testing.T) {
 			assert.Equal(t, tc.expectedStatus, rec.Code)
 
 			// Assert response body
-			switch expectedResponse := tc.expectedResponse.(type) {
-			case dto.HealthCheckResponse:
-				var actualResponse dto.HealthCheckResponse
-				err := json.Unmarshal(rec.Body.Bytes(), &actualResponse)
+			if tc.expectedErrMsg != "" {
+				var resp dto.ErrorResponse
+				err := json.Unmarshal(rec.Body.Bytes(), &resp)
 				require.NoError(t, err)
-				assert.Equal(t, expectedResponse, actualResponse)
-			case dto.ErrorResponse:
-				var actualResponse dto.ErrorResponse
-				err := json.Unmarshal(rec.Body.Bytes(), &actualResponse)
+				assert.Equal(t, tc.expectedErrMsg, resp.Message)
+			} else {
+				var resp dto.HealthCheckResponse
+				err := json.Unmarshal(rec.Body.Bytes(), &resp)
 				require.NoError(t, err)
-				assert.Equal(t, expectedResponse, actualResponse)
+				assert.Equal(t, successResp, resp)
 			}
 
 			// Verify all mock expectations are met

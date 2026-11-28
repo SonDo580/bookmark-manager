@@ -62,8 +62,8 @@ type handlers struct {
 }
 
 func (e *engine) initHandlers() *handlers {
-	healthSvc := service.NewHealth(e.cfg, e.redisClient)
-	healthHandler := handler.NewHealth(healthSvc)
+	healthSvc := service.NewHealth(e.redisClient)
+	healthHandler := handler.NewHealth(e.cfg, healthSvc)
 
 	urlStorageRepo := repository.NewURLStorage(e.redisClient)
 	genCodeSvc := service.NewGenCode()

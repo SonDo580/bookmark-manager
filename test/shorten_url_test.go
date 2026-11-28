@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/SonDo580/bookmark-manager/internal/api"
+	"github.com/SonDo580/bookmark-manager/internal/config"
 	"github.com/SonDo580/bookmark-manager/internal/constants"
 	"github.com/SonDo580/bookmark-manager/internal/dto"
 	"github.com/SonDo580/bookmark-manager/internal/service"
@@ -23,7 +24,7 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 
 	gin.SetMode(gin.TestMode)
 
-	cfg := getEmptyConfig()
+	cfg := &config.Config{}
 
 	const (
 		correctMethod   = http.MethodPost
@@ -106,7 +107,7 @@ func TestShortenURL_Redirect(t *testing.T) {
 
 	gin.SetMode(gin.TestMode)
 
-	cfg := getEmptyConfig()
+	cfg := &config.Config{}
 
 	const (
 		testCode = "abc1234"
