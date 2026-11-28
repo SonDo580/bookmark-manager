@@ -6,18 +6,13 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"uuid"
 
 	"github.com/SonDo580/bookmark-manager/internal/config"
 	"github.com/stretchr/testify/require"
 )
 
-func getDefaultConfig() *config.Config {
-	return &config.Config{
-		ServiceName: "bookmark_service",
-		InstanceID:  uuid.New().String(),
-		Port:        8080,
-	}
+func getEmptyConfig() *config.Config {
+	return &config.Config{}
 }
 
 func newJSONRequest(t *testing.T, method string, target string, payload any) *http.Request {

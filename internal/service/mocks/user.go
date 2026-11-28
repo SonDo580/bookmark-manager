@@ -16,6 +16,34 @@ type UserService struct {
 	mock.Mock
 }
 
+// EditSelfInfo provides a mock function with given fields: ctx, id, input
+func (_m *UserService) EditSelfInfo(ctx context.Context, id string, input dto.EditSelfInfoRequest) (bool, error) {
+	ret := _m.Called(ctx, id, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for EditSelfInfo")
+	}
+
+	var r0 bool
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, dto.EditSelfInfoRequest) (bool, error)); ok {
+		return rf(ctx, id, input)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, dto.EditSelfInfoRequest) bool); ok {
+		r0 = rf(ctx, id, input)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, dto.EditSelfInfoRequest) error); ok {
+		r1 = rf(ctx, id, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetSelfInfoByID provides a mock function with given fields: ctx, id
 func (_m *UserService) GetSelfInfoByID(ctx context.Context, id string) (*model.User, error) {
 	ret := _m.Called(ctx, id)

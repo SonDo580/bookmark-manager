@@ -11,6 +11,7 @@ import (
 	"github.com/SonDo580/bookmark-manager/internal/dto"
 	"github.com/SonDo580/bookmark-manager/internal/service"
 	dbPkg "github.com/SonDo580/bookmark-manager/pkg/db"
+	jwtutils_mocks "github.com/SonDo580/bookmark-manager/pkg/jwtutils/mocks"
 	redisPkg "github.com/SonDo580/bookmark-manager/pkg/redis"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -22,7 +23,7 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 
 	gin.SetMode(gin.TestMode)
 
-	cfg := getDefaultConfig()
+	cfg := getEmptyConfig()
 
 	const (
 		correctMethod   = http.MethodPost
@@ -70,7 +71,11 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 
 			testDB := dbPkg.CreateTestDB(t)
 
-			testAPIEngine := api.NewEngine(cfg, mockRedisClient, testDB)
+			mockJWTGenerator := jwtutils_mocks.NewJWTGenerator(t)
+			mockJWTValidator := jwtutils_mocks.NewJWTValidator(t)
+
+			testAPIEngine := api.NewEngine(cfg, mockRedisClient, testDB, mockJWTGenerator, mockJWTValidator)
+
 			rec := httptest.NewRecorder()
 			req := tc.setupTestRequest(t)
 			testAPIEngine.ServeHTTP(rec, req)
@@ -101,7 +106,7 @@ func TestShortenURL_Redirect(t *testing.T) {
 
 	gin.SetMode(gin.TestMode)
 
-	cfg := getDefaultConfig()
+	cfg := getEmptyConfig()
 
 	const (
 		testCode = "abc1234"
@@ -143,7 +148,11 @@ func TestShortenURL_Redirect(t *testing.T) {
 			err := mockRedisClient.Set(ctx, testCode, testURL, 0).Err()
 			require.NoError(t, err)
 
-			testAPIEngine := api.NewEngine(cfg, mockRedisClient, testDB)
+			mockJWTGenerator := jwtutils_mocks.NewJWTGenerator(t)
+			mockJWTValidator := jwtutils_mocks.NewJWTValidator(t)
+
+			testAPIEngine := api.NewEngine(cfg, mockRedisClient, testDB, mockJWTGenerator, mockJWTValidator)
+
 			rec := httptest.NewRecorder()
 			endpoint := "/v1/links/redirect/" + tc.codeParam
 			req := httptest.NewRequest(http.MethodGet, endpoint, nil)

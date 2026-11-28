@@ -17,6 +17,7 @@ import (
 	"github.com/SonDo580/bookmark-manager/internal/dto"
 	"github.com/SonDo580/bookmark-manager/internal/model"
 	dbPkg "github.com/SonDo580/bookmark-manager/pkg/db"
+	jwtutils_mocks "github.com/SonDo580/bookmark-manager/pkg/jwtutils/mocks"
 	redisPkg "github.com/SonDo580/bookmark-manager/pkg/redis"
 )
 
@@ -25,7 +26,7 @@ func TestUser_Register(t *testing.T) {
 
 	gin.SetMode(gin.TestMode)
 
-	cfg := getDefaultConfig()
+	cfg := getEmptyConfig()
 
 	const (
 		correctMethod   = http.MethodPost
@@ -140,7 +141,11 @@ func TestUser_Register(t *testing.T) {
 			ctx := t.Context()
 			tc.setupDB(ctx, t, testDB)
 
-			testAPIEngine := api.NewEngine(cfg, mockRedisClient, testDB)
+			mockJWTGenerator := jwtutils_mocks.NewJWTGenerator(t)
+			mockJWTValidator := jwtutils_mocks.NewJWTValidator(t)
+
+			testAPIEngine := api.NewEngine(cfg, mockRedisClient, testDB, mockJWTGenerator, mockJWTValidator)
+
 			rec := httptest.NewRecorder()
 			req := tc.setupTestRequest(t)
 			testAPIEngine.ServeHTTP(rec, req)

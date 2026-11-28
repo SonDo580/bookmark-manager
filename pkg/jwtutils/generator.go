@@ -7,6 +7,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+//go:generate mockery --name=JWTGenerator --filename generator.go --outpkg jwtutils_mocks
 type JWTGenerator interface {
 	Generate(payload jwt.MapClaims) (string, error)
 }
