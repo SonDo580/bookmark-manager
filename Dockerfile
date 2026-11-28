@@ -16,6 +16,9 @@ COPY . .
 
 FROM base AS build
 
+RUN go install github.com/swaggo/swag/cmd/swag@v1.16.6
+RUN swag init -g cmd/api/main.go
+
 RUN go build -o bookmark_service cmd/api/main.go
 
 
