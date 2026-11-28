@@ -8,7 +8,6 @@ import (
 	"github.com/SonDo580/bookmark-manager/internal/dto"
 	"github.com/SonDo580/bookmark-manager/internal/service"
 	"github.com/SonDo580/bookmark-manager/pkg/request"
-	"github.com/SonDo580/bookmark-manager/pkg/response"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 )
@@ -41,12 +40,8 @@ func NewUserHandler(svc service.UserService) UserHandler {
 // @Failure      500      {object}  dto.ErrorResponse
 // @Router       /v1/users/register [post]
 func (h *userHandler) Register(c *gin.Context) {
-	input := &dto.RegisterRequest{}
-	if err := c.ShouldBindJSON(input); err != nil {
-		c.AbortWithStatusJSON(
-			http.StatusBadRequest,
-			response.InputFieldError(err),
-		)
+	input, err := request.BindJSONWithAbort[dto.RegisterRequest](c)
+	if err != nil {
 		return
 	}
 
@@ -96,12 +91,8 @@ func (h *userHandler) Register(c *gin.Context) {
 // @Failure      500      {object}  dto.ErrorResponse
 // @Router       /v1/users/login [post]
 func (h *userHandler) Login(c *gin.Context) {
-	input := &dto.LoginRequest{}
-	if err := c.ShouldBindJSON(input); err != nil {
-		c.AbortWithStatusJSON(
-			http.StatusBadRequest,
-			response.InputFieldError(err),
-		)
+	input, err := request.BindJSONWithAbort[dto.LoginRequest](c)
+	if err != nil {
 		return
 	}
 
@@ -196,12 +187,8 @@ func (h *userHandler) EditSelfInfo(c *gin.Context) {
 		return
 	}
 
-	input := &dto.EditSelfInfoRequest{}
-	if err := c.ShouldBindJSON(input); err != nil {
-		c.AbortWithStatusJSON(
-			http.StatusBadRequest,
-			response.InputFieldError(err),
-		)
+	input, err := request.BindJSONWithAbort[dto.EditSelfInfoRequest](c)
+	if err != nil {
 		return
 	}
 

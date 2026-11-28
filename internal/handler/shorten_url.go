@@ -8,7 +8,7 @@ import (
 	"github.com/SonDo580/bookmark-manager/internal/constants"
 	"github.com/SonDo580/bookmark-manager/internal/dto"
 	"github.com/SonDo580/bookmark-manager/internal/service"
-	"github.com/SonDo580/bookmark-manager/pkg/response"
+	"github.com/SonDo580/bookmark-manager/pkg/request"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 )
@@ -38,12 +38,8 @@ func NewShortenURL(svc service.ShortenURL) ShortenURL {
 // @Failure      500      {object}  dto.ErrorResponse
 // @Router       /v1/links/shorten [post]
 func (h *shortenURL) CreateShortenedLink(c *gin.Context) {
-	input := &dto.ShortenURLRequest{}
-	if err := c.ShouldBindJSON(input); err != nil {
-		c.AbortWithStatusJSON(
-			http.StatusBadRequest,
-			response.InputFieldError(err),
-		)
+	input, err := request.BindJSONWithAbort[dto.ShortenURLRequest](c)
+	if err != nil {
 		return
 	}
 
@@ -68,6 +64,10 @@ func (h *shortenURL) CreateShortenedLink(c *gin.Context) {
 	)
 }
 
+type redirectPathParams struct {
+	Code string `uri:"code" binding:"required"`
+}
+
 // Redirect godoc
 // @Summary      Redirect to original URL
 // @Description  Redirect to original URL.
@@ -78,14 +78,11 @@ func (h *shortenURL) CreateShortenedLink(c *gin.Context) {
 // @Failure      500    {object}  	dto.ErrorResponse
 // @Router       /v1/links/redirect/{code} [get]
 func (h *shortenURL) Redirect(c *gin.Context) {
-	code := c.Param("code")
-	if code == "" {
-		c.AbortWithStatusJSON(
-			http.StatusBadRequest,
-			dto.ErrorResponse{Message: constants.MsgInvalidInput},
-		)
+	input, err := request.BindURIWithAbort[redirectPathParams](c)
+	if err != nil {
 		return
 	}
+	code := input.Code
 
 	url, err := h.svc.GetURLFromCode(c, code)
 	if err != nil {
