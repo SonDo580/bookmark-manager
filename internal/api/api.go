@@ -5,10 +5,12 @@ import (
 	"net/http"
 
 	"github.com/SonDo580/bookmark-manager/docs"
+	"github.com/SonDo580/bookmark-manager/internal/api/middleware"
 	"github.com/SonDo580/bookmark-manager/internal/config"
 	"github.com/SonDo580/bookmark-manager/internal/handler"
 	"github.com/SonDo580/bookmark-manager/internal/repository"
 	"github.com/SonDo580/bookmark-manager/internal/service"
+	"github.com/SonDo580/bookmark-manager/pkg/jwtutils"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 	swaggerFiles "github.com/swaggo/files"
@@ -24,19 +26,30 @@ type Engine interface {
 }
 
 type engine struct {
-	app         *gin.Engine
-	cfg         *config.Config
-	redisClient *redis.Client
-	db          *gorm.DB
+	app          *gin.Engine
+	cfg          *config.Config
+	redisClient  *redis.Client
+	db           *gorm.DB
+	jwtGenerator jwtutils.JWTGenerator
+	jwtValidator jwtutils.JWTValidator
 }
 
-func NewEngine(cfg *config.Config, redisClient *redis.Client, db *gorm.DB) Engine {
+func NewEngine(
+	cfg *config.Config,
+	redisClient *redis.Client,
+	db *gorm.DB,
+	jwtGenerator jwtutils.JWTGenerator,
+	jwtValidator jwtutils.JWTValidator,
+) Engine {
 	e := &engine{
-		app:         gin.Default(),
-		cfg:         cfg,
-		redisClient: redisClient,
-		db:          db,
+		app:          gin.Default(),
+		cfg:          cfg,
+		redisClient:  redisClient,
+		db:           db,
+		jwtGenerator: jwtGenerator,
+		jwtValidator: jwtValidator,
 	}
+
 	e.initRoutes()
 
 	return e
@@ -49,8 +62,8 @@ type handlers struct {
 }
 
 func (e *engine) initHandlers() *handlers {
-	healthSvc := service.NewHealth(e.cfg, e.redisClient)
-	healthHandler := handler.NewHealth(healthSvc)
+	healthSvc := service.NewHealth(e.redisClient)
+	healthHandler := handler.NewHealth(e.cfg, healthSvc)
 
 	urlStorageRepo := repository.NewURLStorage(e.redisClient)
 	genCodeSvc := service.NewGenCode()
@@ -58,7 +71,7 @@ func (e *engine) initHandlers() *handlers {
 	shortenURLHandler := handler.NewShortenURL(shortenURLSvc)
 
 	userRepo := repository.NewUserRepository(e.db)
-	userSvc := service.NewUserService(userRepo)
+	userSvc := service.NewUserService(userRepo, e.jwtGenerator, e.cfg)
 	userHandler := handler.NewUserHandler(userSvc)
 
 	return &handlers{
@@ -70,6 +83,8 @@ func (e *engine) initHandlers() *handlers {
 
 func (e *engine) initRoutes() {
 	allHandlers := e.initHandlers()
+
+	jwtMiddleware := middleware.NewJWTMiddleware(e.jwtValidator)
 
 	docs.SwaggerInfo.BasePath = e.cfg.BasePath
 	e.app.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -84,7 +99,20 @@ func (e *engine) initRoutes() {
 			linkRoutes.GET("/redirect/:code", allHandlers.linkHandler.Redirect)
 		}
 
-		v1Routes.POST("/users/register", allHandlers.userHandler.Register)
+		userRoutes := v1Routes.Group("/users")
+		{
+			userRoutes.POST("/register", allHandlers.userHandler.Register)
+			userRoutes.POST("/login", allHandlers.userHandler.Login)
+		}
+	}
+
+	privateV1Routes := e.app.Group("/v1", jwtMiddleware.Auth())
+	{
+		selfInfoRoutes := privateV1Routes.Group("/self/info")
+		{
+			selfInfoRoutes.GET("", allHandlers.userHandler.GetSelfInfo)
+			selfInfoRoutes.PUT("", allHandlers.userHandler.EditSelfInfo)
+		}
 	}
 }
 

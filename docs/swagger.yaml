@@ -1,8 +1,32 @@
 basePath: /
 definitions:
+  dto.EditSelfInfoRequest:
+    properties:
+      display_name:
+        maxLength: 100
+        type: string
+      email:
+        maxLength: 255
+        type: string
+    required:
+    - display_name
+    - email
+    type: object
+  dto.EditSelfInfoResponse:
+    properties:
+      message:
+        type: string
+    type: object
   dto.ErrorResponse:
     properties:
       details: {}
+      message:
+        type: string
+    type: object
+  dto.GetSelfInfoResponse:
+    properties:
+      data:
+        $ref: '#/definitions/model.User'
       message:
         type: string
     type: object
@@ -13,6 +37,24 @@ definitions:
       message:
         type: string
       service_name:
+        type: string
+    type: object
+  dto.LoginRequest:
+    properties:
+      password:
+        minLength: 8
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  dto.LoginResponse:
+    properties:
+      data:
+        type: string
+      message:
         type: string
     type: object
   dto.RegisterRequest:
@@ -47,7 +89,6 @@ definitions:
     properties:
       exp_seconds:
         maximum: 86400
-        minimum: 0
         type: integer
       url:
         type: string
@@ -154,6 +195,100 @@ paths:
       summary: Generate a shortened URL
       tags:
       - link
+  /v1/self/info:
+    get:
+      consumes:
+      - application/json
+      description: Get your information.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.GetSelfInfoResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get your information
+      tags:
+      - user
+    put:
+      consumes:
+      - application/json
+      description: Update authenticated user's profile fields.
+      parameters:
+      - description: Input required
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.EditSelfInfoRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.EditSelfInfoResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Edit your information
+      tags:
+      - user
+  /v1/users/login:
+    post:
+      consumes:
+      - application/json
+      description: Return token if credential is correct.
+      parameters:
+      - description: Input required
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Login
+      tags:
+      - user
   /v1/users/register:
     post:
       consumes:
@@ -177,6 +312,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
@@ -184,4 +323,9 @@ paths:
       summary: Register a new user
       tags:
       - user
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

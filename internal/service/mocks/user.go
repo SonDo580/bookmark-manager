@@ -16,6 +16,92 @@ type UserService struct {
 	mock.Mock
 }
 
+// EditSelfInfo provides a mock function with given fields: ctx, id, input
+func (_m *UserService) EditSelfInfo(ctx context.Context, id string, input dto.EditSelfInfoRequest) (bool, error) {
+	ret := _m.Called(ctx, id, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for EditSelfInfo")
+	}
+
+	var r0 bool
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, dto.EditSelfInfoRequest) (bool, error)); ok {
+		return rf(ctx, id, input)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, dto.EditSelfInfoRequest) bool); ok {
+		r0 = rf(ctx, id, input)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, dto.EditSelfInfoRequest) error); ok {
+		r1 = rf(ctx, id, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetSelfInfoByID provides a mock function with given fields: ctx, id
+func (_m *UserService) GetSelfInfoByID(ctx context.Context, id string) (*model.User, error) {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetSelfInfoByID")
+	}
+
+	var r0 *model.User
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*model.User, error)); ok {
+		return rf(ctx, id)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) *model.User); ok {
+		r0 = rf(ctx, id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.User)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Login provides a mock function with given fields: ctx, username, password
+func (_m *UserService) Login(ctx context.Context, username string, password string) (string, error) {
+	ret := _m.Called(ctx, username, password)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Login")
+	}
+
+	var r0 string
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) (string, error)); ok {
+		return rf(ctx, username, password)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) string); ok {
+		r0 = rf(ctx, username, password)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
+		r1 = rf(ctx, username, password)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // Register provides a mock function with given fields: ctx, input
 func (_m *UserService) Register(ctx context.Context, input dto.RegisterRequest) (*model.User, error) {
 	ret := _m.Called(ctx, input)

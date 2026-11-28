@@ -5,6 +5,8 @@ import (
 	"github.com/SonDo580/bookmark-manager/internal/config"
 	"github.com/SonDo580/bookmark-manager/internal/model"
 	dbPkg "github.com/SonDo580/bookmark-manager/pkg/db"
+	"github.com/SonDo580/bookmark-manager/pkg/jwtutils"
+	"github.com/SonDo580/bookmark-manager/pkg/logger"
 	"github.com/SonDo580/bookmark-manager/pkg/redis"
 )
 
@@ -12,11 +14,16 @@ import (
 // @version         1.0.0
 // @description		API for managing bookmark
 // @BasePath  		/
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 func main() {
 	cfg, err := config.Load()
 	if err != nil {
 		panic(err)
 	}
+
+	logger.SetLogLevel(cfg.LogLevel)
 
 	redisClient, err := redis.NewClient("")
 	if err != nil {
@@ -33,7 +40,16 @@ func main() {
 		panic(err)
 	}
 
-	app := api.NewEngine(cfg, redisClient, db)
+	jwtGenerator, err := jwtutils.NewJWTGenerator(cfg.PrivateKeyPath)
+	if err != nil {
+		panic(err)
+	}
+	jwtValidator, err := jwtutils.NewJWTValidator(cfg.PublicKeyPath)
+	if err != nil {
+		panic(err)
+	}
+
+	app := api.NewEngine(cfg, redisClient, db, jwtGenerator, jwtValidator)
 	err = app.Start()
 	if err != nil {
 		panic(err)

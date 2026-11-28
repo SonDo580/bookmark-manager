@@ -2,19 +2,21 @@ package handler
 
 import (
 	"errors"
-	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/SonDo580/bookmark-manager/internal/constants"
 	"github.com/SonDo580/bookmark-manager/internal/dto"
 	"github.com/SonDo580/bookmark-manager/internal/service"
-	"github.com/SonDo580/bookmark-manager/pkg/response"
+	"github.com/SonDo580/bookmark-manager/pkg/request"
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 )
 
 type UserHandler interface {
 	Register(c *gin.Context)
+	Login(c *gin.Context)
+	GetSelfInfo(c *gin.Context)
+	EditSelfInfo(c *gin.Context)
 }
 
 type userHandler struct {
@@ -38,12 +40,8 @@ func NewUserHandler(svc service.UserService) UserHandler {
 // @Failure      500      {object}  dto.ErrorResponse
 // @Router       /v1/users/register [post]
 func (h *userHandler) Register(c *gin.Context) {
-	input := &dto.RegisterRequest{}
-	if err := c.ShouldBindJSON(input); err != nil {
-		c.AbortWithStatusJSON(
-			http.StatusBadRequest,
-			response.InputFieldError(err),
-		)
+	input, err := request.BindJSONWithAbort[dto.RegisterRequest](c)
+	if err != nil {
 		return
 	}
 
@@ -61,7 +59,8 @@ func (h *userHandler) Register(c *gin.Context) {
 				dto.ErrorResponse{Message: constants.MsgEmailAlreadyExists},
 			)
 		default:
-			log.Println(fmt.Errorf("Register failed: %w", err).Error())
+			log.Error().Err(err).Msg("Register failed")
+
 			c.AbortWithStatusJSON(
 				http.StatusInternalServerError,
 				dto.ErrorResponse{Message: constants.MsgInternalServerError},
@@ -76,6 +75,152 @@ func (h *userHandler) Register(c *gin.Context) {
 		dto.RegisterResponse{
 			Message: "Register user successfully!",
 			Data:    user,
+		},
+	)
+}
+
+// Login godoc
+// @Summary      Login
+// @Description  Return token if credential is correct.
+// @Tags         user
+// @Accept       json
+// @Produce      json
+// @Param        request  body      dto.LoginRequest  true  "Input required"
+// @Success      200      {object}  dto.LoginResponse
+// @Failure      400      {object}  dto.ErrorResponse
+// @Failure      500      {object}  dto.ErrorResponse
+// @Router       /v1/users/login [post]
+func (h *userHandler) Login(c *gin.Context) {
+	input, err := request.BindJSONWithAbort[dto.LoginRequest](c)
+	if err != nil {
+		return
+	}
+
+	tokenStr, err := h.svc.Login(c, input.Username, input.Password)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrWrongCredentials):
+			c.AbortWithStatusJSON(
+				http.StatusBadRequest,
+				dto.ErrorResponse{Message: constants.MsgWrongCredentials},
+			)
+		default:
+			log.Error().Err(err).Msg("Login failed")
+
+			c.AbortWithStatusJSON(
+				http.StatusInternalServerError,
+				dto.ErrorResponse{Message: constants.MsgInternalServerError},
+			)
+		}
+		return
+	}
+
+	c.JSON(
+		http.StatusOK,
+		dto.LoginResponse{
+			Message: "Logged in successfully!",
+			Data:    tokenStr,
+		},
+	)
+}
+
+// GetSelfInfo godoc
+// @Summary      Get your information
+// @Description  Get your information.
+// @Tags         user
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Success      200      {object}  dto.GetSelfInfoResponse
+// @Failure      401      {object}  dto.ErrorResponse
+// @Failure      500      {object}  dto.ErrorResponse
+// @Router       /v1/self/info [get]
+func (h *userHandler) GetSelfInfo(c *gin.Context) {
+	userID, err := request.ExtractUserIDFromCtxWithAbort(c)
+	if err != nil {
+		return
+	}
+
+	user, err := h.svc.GetSelfInfoByID(c, userID)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrUserNotFound):
+			c.AbortWithStatusJSON(
+				http.StatusUnauthorized,
+				dto.ErrorResponse{Message: constants.MsgUserNotFound},
+			)
+		default:
+			log.Error().Err(err).Msgf("GetSelfInfo failed for %s", userID)
+
+			c.AbortWithStatusJSON(
+				http.StatusInternalServerError,
+				dto.ErrorResponse{Message: constants.MsgInternalServerError},
+			)
+		}
+
+		return
+	}
+
+	c.JSON(
+		http.StatusOK,
+		dto.GetSelfInfoResponse{Data: user},
+	)
+}
+
+// EditSelfInfo godoc
+// @Summary      Edit your information
+// @Description  Update authenticated user's profile fields.
+// @Tags         user
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        request  body      dto.EditSelfInfoRequest   true  "Input required"
+// @Success      200      {object}  dto.EditSelfInfoResponse
+// @Failure      400      {object}  dto.ErrorResponse
+// @Failure      401      {object}  dto.ErrorResponse
+// @Failure      409      {object}  dto.ErrorResponse
+// @Failure      500      {object}  dto.ErrorResponse
+// @Router       /v1/self/info [put]
+func (h *userHandler) EditSelfInfo(c *gin.Context) {
+	userID, err := request.ExtractUserIDFromCtxWithAbort(c)
+	if err != nil {
+		return
+	}
+
+	input, err := request.BindJSONWithAbort[dto.EditSelfInfoRequest](c)
+	if err != nil {
+		return
+	}
+
+	_, err = h.svc.EditSelfInfo(c, userID, *input)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrUserNotFound):
+			c.AbortWithStatusJSON(
+				http.StatusUnauthorized,
+				dto.ErrorResponse{Message: constants.MsgUserNotFound},
+			)
+		case errors.Is(err, service.ErrDuplicateEmail):
+			c.AbortWithStatusJSON(
+				http.StatusConflict,
+				dto.ErrorResponse{Message: constants.MsgEmailAlreadyExists},
+			)
+		default:
+			log.Error().Err(err).Msgf("EditSelfInfo failed for %s", userID)
+
+			c.AbortWithStatusJSON(
+				http.StatusInternalServerError,
+				dto.ErrorResponse{Message: constants.MsgInternalServerError},
+			)
+		}
+
+		return
+	}
+
+	c.JSON(
+		http.StatusOK,
+		dto.EditSelfInfoResponse{
+			Message: "Updated user information successfully!",
 		},
 	)
 }

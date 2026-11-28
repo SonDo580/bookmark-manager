@@ -87,10 +87,10 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 			expectedErrMsg: constants.MsgInvalidInput,
 		},
 		{
-			name: "fail: negative exp_seconds",
+			name: "fail: non-positive exp_seconds",
 			input: dto.ShortenURLRequest{
 				URL:        testURL,
-				ExpSeconds: -10,
+				ExpSeconds: 0,
 			},
 			setupMocks:     func(mockSvc *service_mocks.ShortenURL, ctx context.Context) {},
 			expectedStatus: http.StatusBadRequest,
@@ -105,19 +105,6 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 			setupMocks:     func(mockSvc *service_mocks.ShortenURL, ctx context.Context) {},
 			expectedStatus: http.StatusBadRequest,
 			expectedErrMsg: constants.MsgInvalidInput,
-		},
-		{
-			name: "success: omit optional exp_seconds",
-			input: dto.ShortenURLRequest{
-				URL: testURL,
-			},
-			setupMocks: func(mockSvc *service_mocks.ShortenURL, ctx context.Context) {
-				mockSvc.On("CreateShortenedLink", ctx, testURL, time.Duration(0)).
-					Return(testCode, nil).
-					Once()
-			},
-			expectedStatus:  http.StatusCreated,
-			successResponse: responseSuccess(testCode),
 		},
 		{
 			name: "fail: service error",

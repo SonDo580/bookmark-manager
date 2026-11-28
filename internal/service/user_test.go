@@ -5,10 +5,12 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/SonDo580/bookmark-manager/internal/config"
 	"github.com/SonDo580/bookmark-manager/internal/dto"
 	"github.com/SonDo580/bookmark-manager/internal/model"
 	"github.com/SonDo580/bookmark-manager/internal/repository"
 	repository_mocks "github.com/SonDo580/bookmark-manager/internal/repository/mocks"
+	jwtutils_mocks "github.com/SonDo580/bookmark-manager/pkg/jwtutils/mocks"
 	"github.com/SonDo580/bookmark-manager/pkg/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -107,9 +109,10 @@ func TestUserService_Register(t *testing.T) {
 			ctx := t.Context()
 
 			mockRepo := repository_mocks.NewUserRepository(t)
+			mockJWTGenerator := jwtutils_mocks.NewJWTGenerator(t)
 			tc.setupMocks(ctx, mockRepo)
 
-			svc := NewUserService(mockRepo)
+			svc := NewUserService(mockRepo, mockJWTGenerator, &config.Config{})
 
 			result, err := svc.Register(ctx, tc.input)
 

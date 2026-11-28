@@ -7,10 +7,12 @@ import (
 	"testing"
 
 	"github.com/SonDo580/bookmark-manager/internal/api"
+	"github.com/SonDo580/bookmark-manager/internal/config"
 	"github.com/SonDo580/bookmark-manager/internal/constants"
 	"github.com/SonDo580/bookmark-manager/internal/dto"
 	"github.com/SonDo580/bookmark-manager/internal/service"
 	dbPkg "github.com/SonDo580/bookmark-manager/pkg/db"
+	jwtutils_mocks "github.com/SonDo580/bookmark-manager/pkg/jwtutils/mocks"
 	redisPkg "github.com/SonDo580/bookmark-manager/pkg/redis"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -22,7 +24,7 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 
 	gin.SetMode(gin.TestMode)
 
-	cfg := getDefaultConfig()
+	cfg := &config.Config{}
 
 	const (
 		correctMethod   = http.MethodPost
@@ -49,11 +51,11 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 			expectedStatus: http.StatusCreated,
 		},
 		{
-			name: "fail: invalid request body (negative exp_seconds)",
+			name: "fail: invalid request body (non-positive exp_seconds)",
 			setupTestRequest: func(t *testing.T) *http.Request {
 				return newJSONRequest(t, correctMethod, correctEndpoint, dto.ShortenURLRequest{
 					URL:        testURL,
-					ExpSeconds: -10,
+					ExpSeconds: 0,
 				})
 			},
 			expectedStatus: http.StatusBadRequest,
@@ -70,7 +72,11 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 
 			testDB := dbPkg.CreateTestDB(t)
 
-			testAPIEngine := api.NewEngine(cfg, mockRedisClient, testDB)
+			mockJWTGenerator := jwtutils_mocks.NewJWTGenerator(t)
+			mockJWTValidator := jwtutils_mocks.NewJWTValidator(t)
+
+			testAPIEngine := api.NewEngine(cfg, mockRedisClient, testDB, mockJWTGenerator, mockJWTValidator)
+
 			rec := httptest.NewRecorder()
 			req := tc.setupTestRequest(t)
 			testAPIEngine.ServeHTTP(rec, req)
@@ -101,7 +107,7 @@ func TestShortenURL_Redirect(t *testing.T) {
 
 	gin.SetMode(gin.TestMode)
 
-	cfg := getDefaultConfig()
+	cfg := &config.Config{}
 
 	const (
 		testCode = "abc1234"
@@ -143,7 +149,11 @@ func TestShortenURL_Redirect(t *testing.T) {
 			err := mockRedisClient.Set(ctx, testCode, testURL, 0).Err()
 			require.NoError(t, err)
 
-			testAPIEngine := api.NewEngine(cfg, mockRedisClient, testDB)
+			mockJWTGenerator := jwtutils_mocks.NewJWTGenerator(t)
+			mockJWTValidator := jwtutils_mocks.NewJWTValidator(t)
+
+			testAPIEngine := api.NewEngine(cfg, mockRedisClient, testDB, mockJWTGenerator, mockJWTValidator)
+
 			rec := httptest.NewRecorder()
 			endpoint := "/v1/links/redirect/" + tc.codeParam
 			req := httptest.NewRequest(http.MethodGet, endpoint, nil)

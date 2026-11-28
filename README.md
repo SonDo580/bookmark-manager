@@ -10,6 +10,12 @@
 go mod tidy
 ```
 
+- Generate key pair for authentication:
+
+```bash
+make generate-key
+```
+
 - Start services:
 
 ```bash

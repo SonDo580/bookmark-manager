@@ -5,11 +5,14 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"uuid"
 
 	"github.com/SonDo580/bookmark-manager/internal/api"
+	"github.com/SonDo580/bookmark-manager/internal/config"
 	"github.com/SonDo580/bookmark-manager/internal/constants"
 	"github.com/SonDo580/bookmark-manager/internal/dto"
 	dbPkg "github.com/SonDo580/bookmark-manager/pkg/db"
+	jwtutils_mocks "github.com/SonDo580/bookmark-manager/pkg/jwtutils/mocks"
 	redisPkg "github.com/SonDo580/bookmark-manager/pkg/redis"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -21,7 +24,11 @@ func TestHealthCheck(t *testing.T) {
 
 	gin.SetMode(gin.TestMode)
 
-	cfg := getDefaultConfig()
+	cfg := &config.Config{
+		ServiceName: "bookmark_service",
+		InstanceID:  uuid.New().String(),
+		Port:        8080,
+	}
 
 	const (
 		correctMethod   = http.MethodGet
@@ -61,7 +68,11 @@ func TestHealthCheck(t *testing.T) {
 
 			testDB := dbPkg.CreateTestDB(t)
 
-			testAPIEngine := api.NewEngine(cfg, mockRedisClient, testDB)
+			mockJWTGenerator := jwtutils_mocks.NewJWTGenerator(t)
+			mockJWTValidator := jwtutils_mocks.NewJWTValidator(t)
+
+			testAPIEngine := api.NewEngine(cfg, mockRedisClient, testDB, mockJWTGenerator, mockJWTValidator)
+
 			rec := httptest.NewRecorder()
 			req := tc.setupTestRequest()
 			testAPIEngine.ServeHTTP(rec, req)
