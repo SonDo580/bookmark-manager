@@ -108,9 +108,10 @@ func (e *engine) initRoutes() {
 
 	privateV1Routes := e.app.Group("/v1", jwtMiddleware.Auth())
 	{
-		selfRoutes := privateV1Routes.Group("/self")
+		selfInfoRoutes := privateV1Routes.Group("/self/info")
 		{
-			selfRoutes.GET("/info", allHandlers.userHandler.GetSelfInfo)
+			selfInfoRoutes.GET("", allHandlers.userHandler.GetSelfInfo)
+			selfInfoRoutes.PUT("", allHandlers.userHandler.EditSelfInfo)
 		}
 	}
 }

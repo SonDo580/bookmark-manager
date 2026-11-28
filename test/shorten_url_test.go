@@ -49,11 +49,11 @@ func TestShortenURL_CreateShortenedLink(t *testing.T) {
 			expectedStatus: http.StatusCreated,
 		},
 		{
-			name: "fail: invalid request body (negative exp_seconds)",
+			name: "fail: invalid request body (non-positive exp_seconds)",
 			setupTestRequest: func(t *testing.T) *http.Request {
 				return newJSONRequest(t, correctMethod, correctEndpoint, dto.ShortenURLRequest{
 					URL:        testURL,
-					ExpSeconds: -10,
+					ExpSeconds: 0,
 				})
 			},
 			expectedStatus: http.StatusBadRequest,

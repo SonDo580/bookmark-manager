@@ -1,5 +1,22 @@
 basePath: /
 definitions:
+  dto.EditSelfInfoRequest:
+    properties:
+      display_name:
+        maxLength: 100
+        type: string
+      email:
+        maxLength: 255
+        type: string
+    required:
+    - display_name
+    - email
+    type: object
+  dto.EditSelfInfoResponse:
+    properties:
+      message:
+        type: string
+    type: object
   dto.ErrorResponse:
     properties:
       details: {}
@@ -70,7 +87,6 @@ definitions:
     properties:
       exp_seconds:
         maximum: 86400
-        minimum: 0
         type: integer
       url:
         type: string
@@ -200,6 +216,45 @@ paths:
       security:
       - BearerAuth: []
       summary: Get your information
+      tags:
+      - user
+    put:
+      consumes:
+      - application/json
+      description: Update authenticated user's profile fields.
+      parameters:
+      - description: Input required
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.EditSelfInfoRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.EditSelfInfoResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Edit your information
       tags:
       - user
   /v1/users/login:

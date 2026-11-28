@@ -17,6 +17,7 @@ type UserHandler interface {
 	Register(c *gin.Context)
 	Login(c *gin.Context)
 	GetSelfInfo(c *gin.Context)
+	EditSelfInfo(c *gin.Context)
 }
 
 type userHandler struct {
@@ -144,28 +145,95 @@ func (h *userHandler) Login(c *gin.Context) {
 // @Failure      500      {object}  dto.ErrorResponse
 // @Router       /v1/self/info [get]
 func (h *userHandler) GetSelfInfo(c *gin.Context) {
-	userID, err := request.ExtractUserID(c)
+	userID, err := request.ExtractUserIDFromCtxWithAbort(c)
 	if err != nil {
-		c.AbortWithStatusJSON(
-			http.StatusUnauthorized,
-			dto.ErrorResponse{Message: constants.MsgInvalidToken},
-		)
 		return
 	}
 
 	user, err := h.svc.GetSelfInfoByID(c, userID)
 	if err != nil {
-		log.Error().Err(err).Msgf("GetSelfInfo failed for %s", userID)
+		switch {
+		case errors.Is(err, service.ErrUserNotFound):
+			c.AbortWithStatusJSON(
+				http.StatusUnauthorized,
+				dto.ErrorResponse{Message: constants.MsgUserNotFound},
+			)
+		default:
+			log.Error().Err(err).Msgf("GetSelfInfo failed for %s", userID)
 
-		c.AbortWithStatusJSON(
-			http.StatusInternalServerError,
-			dto.ErrorResponse{Message: constants.MsgInternalServerError},
-		)
+			c.AbortWithStatusJSON(
+				http.StatusInternalServerError,
+				dto.ErrorResponse{Message: constants.MsgInternalServerError},
+			)
+		}
+
 		return
 	}
 
 	c.JSON(
 		http.StatusOK,
 		dto.GetSelfInfoResponse{Data: user},
+	)
+}
+
+// EditSelfInfo godoc
+// @Summary      Edit your information
+// @Description  Update authenticated user's profile fields.
+// @Tags         user
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        request  body      dto.EditSelfInfoRequest   true  "Input required"
+// @Success      200      {object}  dto.EditSelfInfoResponse
+// @Failure      400      {object}  dto.ErrorResponse
+// @Failure      401      {object}  dto.ErrorResponse
+// @Failure      409      {object}  dto.ErrorResponse
+// @Failure      500      {object}  dto.ErrorResponse
+// @Router       /v1/self/info [put]
+func (h *userHandler) EditSelfInfo(c *gin.Context) {
+	userID, err := request.ExtractUserIDFromCtxWithAbort(c)
+	if err != nil {
+		return
+	}
+
+	input := &dto.EditSelfInfoRequest{}
+	if err := c.ShouldBindJSON(input); err != nil {
+		c.AbortWithStatusJSON(
+			http.StatusBadRequest,
+			response.InputFieldError(err),
+		)
+		return
+	}
+
+	_, err = h.svc.EditSelfInfo(c, userID, *input)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrUserNotFound):
+			c.AbortWithStatusJSON(
+				http.StatusUnauthorized,
+				dto.ErrorResponse{Message: constants.MsgUserNotFound},
+			)
+		case errors.Is(err, service.ErrDuplicateEmail):
+			c.AbortWithStatusJSON(
+				http.StatusConflict,
+				dto.ErrorResponse{Message: constants.MsgEmailAlreadyExists},
+			)
+		default:
+			log.Error().Err(err).Msgf("EditSelfInfo failed for %s", userID)
+
+			c.AbortWithStatusJSON(
+				http.StatusInternalServerError,
+				dto.ErrorResponse{Message: constants.MsgInternalServerError},
+			)
+		}
+
+		return
+	}
+
+	c.JSON(
+		http.StatusOK,
+		dto.EditSelfInfoResponse{
+			Message: "Updated user information successfully!",
+		},
 	)
 }

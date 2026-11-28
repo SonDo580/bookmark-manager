@@ -57,7 +57,7 @@ func (m *jwtMiddleware) Auth() gin.HandlerFunc {
 		}
 
 		// Save data in context
-		request.SetClaims(c, claims)
+		request.SetClaimsInCtx(c, claims)
 
 		c.Next()
 	}

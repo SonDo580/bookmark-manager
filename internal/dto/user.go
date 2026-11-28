@@ -29,3 +29,12 @@ type LoginResponse struct {
 type GetSelfInfoResponse struct {
 	Data *model.User `json:"data"`
 }
+
+type EditSelfInfoRequest struct {
+	DisplayName string `json:"display_name" binding:"required,max=100"`
+	Email       string `json:"email" binding:"required,email,max=255"`
+}
+
+type EditSelfInfoResponse struct {
+	Message string `json:"message"`
+}

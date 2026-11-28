@@ -20,6 +20,7 @@ type UserService interface {
 	Register(ctx context.Context, input dto.RegisterRequest) (*model.User, error)
 	Login(ctx context.Context, username, password string) (string, error)
 	GetSelfInfoByID(ctx context.Context, id string) (*model.User, error)
+	EditSelfInfo(ctx context.Context, id string, input dto.EditSelfInfoRequest) (updated bool, err error)
 }
 
 type userService struct {
@@ -43,6 +44,8 @@ func NewUserService(
 var (
 	ErrDuplicateUsername = errors.New(constants.MsgUsernameAlreadyExists)
 	ErrDuplicateEmail    = errors.New(constants.MsgEmailAlreadyExists)
+	ErrWrongCredentials  = errors.New(constants.MsgWrongCredentials)
+	ErrUserNotFound      = errors.New(constants.MsgUserNotFound)
 )
 
 func (s *userService) Register(ctx context.Context, input dto.RegisterRequest) (*model.User, error) {
@@ -72,8 +75,6 @@ func (s *userService) Register(ctx context.Context, input dto.RegisterRequest) (
 
 	return user, nil
 }
-
-var ErrWrongCredentials = errors.New(constants.MsgWrongCredentials)
 
 func (s *userService) Login(ctx context.Context, username, password string) (string, error) {
 	// Get user
@@ -106,5 +107,43 @@ func (s *userService) Login(ctx context.Context, username, password string) (str
 }
 
 func (s *userService) GetSelfInfoByID(ctx context.Context, id string) (*model.User, error) {
-	return s.repo.GetUserByID(ctx, id)
+	user, err := s.repo.GetUserByID(ctx, id)
+	if err != nil {
+		switch {
+		case errors.Is(err, repository.ErrUserNotFound):
+			return nil, ErrUserNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return user, nil
+}
+
+func (s *userService) EditSelfInfo(ctx context.Context, id string, input dto.EditSelfInfoRequest) (updated bool, err error) {
+	user, err := s.repo.GetUserByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, repository.ErrUserNotFound) {
+			return false, ErrUserNotFound
+		}
+		return false, err
+	}
+
+	if user.DisplayName == input.DisplayName && user.Email == input.Email {
+		return false, nil // no changes
+	}
+
+	err = s.repo.UpdateUser(ctx, id, input.DisplayName, input.Email)
+	if err != nil {
+		switch {
+		case errors.Is(err, repository.ErrUserNotFound):
+			return false, ErrUserNotFound
+		case errors.Is(err, repository.ErrDuplicateEmail):
+			return false, ErrDuplicateEmail
+		default:
+			return false, err
+		}
+	}
+
+	return true, nil
 }

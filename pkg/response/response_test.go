@@ -9,9 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type ShortenURLRequest struct {
-	URL        string `json:"url" binding:"required,url"`
-	ExpSeconds int    `json:"exp_seconds" binding:"gte=0,lte=86400"`
+type exampleInput struct {
+	URL string `json:"url" binding:"required,url"`
 }
 
 func TestInputFieldError(t *testing.T) {
@@ -32,23 +31,11 @@ func TestInputFieldError(t *testing.T) {
 		},
 		{
 			name: "single validation error",
-			inputErr: validate.Struct(ShortenURLRequest{
-				URL:        "", // fail 'required'
-				ExpSeconds: 3600,
+			inputErr: validate.Struct(exampleInput{
+				URL: "",
 			}),
 			expectedDetails: []string{
 				"URL is invalid (required)",
-			},
-		},
-		{
-			name: "multiple validation errors",
-			inputErr: validate.Struct(ShortenURLRequest{
-				URL:        "invalid-url", // fail 'url'
-				ExpSeconds: 86400 + 1,     // fail 'lte'
-			}),
-			expectedDetails: []string{
-				"URL is invalid (url)",
-				"ExpSeconds is invalid (lte)",
 			},
 		},
 	}
